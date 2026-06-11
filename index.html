@@ -222,6 +222,32 @@
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 2px; cursor: pointer; background: none;
   }
+  .tb-field {
+    height: 26px; padding: 0 6px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg); color: var(--text-primary);
+    font-family: var(--font-base); font-size: 11px;
+    outline: none; transition: border-color var(--transition);
+  }
+  .tb-field:focus { border-color: var(--accent); }
+  .tb-labeled-control { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tb-labeled-control span { font-size: 9px; color: var(--text-muted); line-height: 1; white-space: nowrap; }
+  .tb-color-button {
+    width: 28px; height: 28px; padding: 5px;
+  }
+  .tb-color-swatch {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1px solid var(--border); box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
+  }
+  .bg-swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .bg-swatch {
+    min-height: 48px; border: 2px solid var(--border); border-radius: var(--radius-md);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--text-secondary); transition: border-color var(--transition), transform var(--transition);
+  }
+  .bg-swatch:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .bg-custom-row { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .bg-custom-row label { font-size: 12px; color: var(--text-secondary); }
 
   #editor-wrap {
     flex: 1; overflow-y: auto; padding: 28px 32px;
@@ -323,7 +349,7 @@
   .settings-grid { display: flex; flex-direction: column; gap: 14px; }
   .setting-row { display: flex; align-items: center; gap: 10px; }
   .setting-row label { flex: 1; font-size: 13px; color: var(--text-secondary); }
-  .setting-row select, .setting-row input[type="number"] {
+  .setting-row select, .setting-row input[type="number"], .setting-row input[type="text"] {
     padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm);
     background: var(--bg); color: var(--text-primary);
     font-family: var(--font-base); font-size: 12px; outline: none;
@@ -535,32 +561,21 @@
       <div class="toolbar-sep"></div>
 
       <div class="toolbar-group">
-        <select class="tb-select" id="sel-font" style="max-width:120px">
-          <option value="'Noto Sans KR', sans-serif">본고딕</option>
-          <option value="'Noto Serif KR', serif">본명조</option>
-          <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
-          <option value="'Nanum Myeongjo', serif">나눔명조</option>
-          <option value="'Gowun Dodum', sans-serif">고운돋움</option>
-          <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
-          <option value="Georgia, serif">Georgia</option>
-          <option value="Arial, sans-serif">Arial</option>
-        </select>
-        <select class="tb-select" id="sel-size" style="width:56px">
-          <option value="11px">11</option>
-          <option value="12px">12</option>
-          <option value="13px">13</option>
-          <option value="14px" selected>14</option>
-          <option value="15px">15</option>
-          <option value="16px">16</option>
-          <option value="18px">18</option>
-          <option value="20px">20</option>
-          <option value="22px">22</option>
-          <option value="24px">24</option>
-          <option value="28px">28</option>
-          <option value="32px">32</option>
-          <option value="36px">36</option>
-          <option value="48px">48</option>
-        </select>
+        <input class="tb-field" id="sel-font" list="font-options" value="Noto Sans KR" placeholder="글꼴" style="width:128px" title="글꼴 직접 입력">
+        <datalist id="font-options">
+          <option value="Noto Sans KR">
+          <option value="Noto Serif KR">
+          <option value="Nanum Gothic">
+          <option value="Nanum Myeongjo">
+          <option value="Gowun Dodum">
+          <option value="IBM Plex Mono">
+          <option value="Georgia">
+          <option value="Arial">
+          <option value="serif">
+          <option value="sans-serif">
+          <option value="monospace">
+        </datalist>
+        <input class="tb-field" id="sel-size" type="number" min="8" max="120" step="1" value="14" style="width:58px" title="글자 크기(px) 직접 입력">
       </div>
       <div class="toolbar-sep"></div>
 
@@ -575,11 +590,13 @@
       <div class="toolbar-sep"></div>
 
       <div class="toolbar-group">
-        <label title="글자 색상" style="display:flex;align-items:center;cursor:pointer">
-          <input type="color" class="tb-input-color" id="color-text" value="#1a1a1a" title="글자 색상">
+        <label class="tb-labeled-control" title="글자색" style="cursor:pointer">
+          <input type="color" class="tb-input-color" id="color-text" value="#1a1a1a" title="글자색">
+          <span>글자색</span>
         </label>
-        <label title="하이라이트" style="display:flex;align-items:center;cursor:pointer;margin-left:2px">
-          <input type="color" class="tb-input-color" id="color-hl" value="#fef08a" title="하이라이트">
+        <label class="tb-labeled-control" title="텍스트 배경" style="cursor:pointer;margin-left:2px">
+          <input type="color" class="tb-input-color" id="color-hl" value="#fef08a" title="텍스트 배경">
+          <span>텍스트 배경</span>
         </label>
       </div>
       <div class="toolbar-sep"></div>
@@ -611,9 +628,12 @@
       <div class="toolbar-sep"></div>
 
       <div class="toolbar-group">
-        <button class="tb-btn" id="cmd-bgcolor" title="배경색">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        </button>
+        <div class="tb-labeled-control">
+          <button class="tb-btn tb-color-button" id="cmd-bgcolor" title="메모 배경색">
+            <span class="tb-color-swatch" id="note-bg-indicator" style="background:#ffffff"></span>
+          </button>
+          <span>메모 배경</span>
+        </div>
         <button class="tb-btn" id="btn-export" title="내보내기">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
@@ -711,25 +731,12 @@
     <div class="settings-grid">
       <div class="setting-row">
         <label>기본 글꼴</label>
-        <select id="s-font">
-          <option value="'Noto Sans KR', sans-serif">본고딕 (Noto Sans KR)</option>
-          <option value="'Noto Serif KR', serif">본명조 (Noto Serif KR)</option>
-          <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
-          <option value="'Nanum Myeongjo', serif">나눔명조</option>
-          <option value="'Gowun Dodum', sans-serif">고운돋움</option>
-          <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
-        </select>
+        <input type="text" id="s-font" list="font-options" value="Noto Sans KR" placeholder="예: Noto Sans KR" style="width:180px">
       </div>
+      <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:-8px">설치된 글꼴 또는 오픈 라이선스 글꼴 이름을 직접 입력해 사용할 수 있습니다.</p>
       <div class="setting-row">
         <label>기본 글자 크기</label>
-        <select id="s-size">
-          <option value="13px">13px</option>
-          <option value="14px" selected>14px</option>
-          <option value="15px">15px</option>
-          <option value="16px">16px</option>
-          <option value="18px">18px</option>
-          <option value="20px">20px</option>
-        </select>
+        <input type="number" id="s-size" min="8" max="120" step="1" value="14" style="width:72px">
       </div>
       <div class="setting-row">
         <label>자동 저장 주기 (초)</label>
@@ -745,22 +752,22 @@
 
 <!-- BG color -->
 <div class="modal-overlay" id="modal-bgcolor" style="display:none">
-  <div class="modal" style="min-width:260px">
-    <h3>배경색</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
-      <!-- 초기화 (X 아이콘) -->
-      <div class="bg-swatch" data-class=""
-           style="width:32px;height:32px;background:var(--panel-bg);border-radius:6px;cursor:pointer;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;"
-           title="배경색 없음">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </div>
-      <div class="bg-swatch" data-class="note-bg-yellow" style="width:32px;height:32px;background:#fefce8;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
-      <div class="bg-swatch" data-class="note-bg-blue"   style="width:32px;height:32px;background:#eff6ff;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
-      <div class="bg-swatch" data-class="note-bg-green"  style="width:32px;height:32px;background:#f0fdf4;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
-      <div class="bg-swatch" data-class="note-bg-pink"   style="width:32px;height:32px;background:#fdf2f8;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
-      <div class="bg-swatch" data-class="note-bg-purple" style="width:32px;height:32px;background:#faf5ff;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
-      <div class="bg-swatch" data-class="note-bg-slate"  style="width:32px;height:32px;background:#f8fafc;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
-      <div class="bg-swatch" data-class="note-bg-dark"   style="width:32px;height:32px;background:#1e1e1e;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
+  <div class="modal" style="min-width:300px">
+    <h3>메모 배경색</h3>
+    <div class="bg-swatch-grid">
+      <div class="bg-swatch" data-color="" style="background:var(--panel-bg)" title="배경색 없음">없음</div>
+      <div class="bg-swatch" data-color="#fefce8" style="background:#fefce8" title="노랑"></div>
+      <div class="bg-swatch" data-color="#eff6ff" style="background:#eff6ff" title="파랑"></div>
+      <div class="bg-swatch" data-color="#f0fdf4" style="background:#f0fdf4" title="초록"></div>
+      <div class="bg-swatch" data-color="#fdf2f8" style="background:#fdf2f8" title="분홍"></div>
+      <div class="bg-swatch" data-color="#faf5ff" style="background:#faf5ff" title="보라"></div>
+      <div class="bg-swatch" data-color="#f8fafc" style="background:#f8fafc" title="회색"></div>
+      <div class="bg-swatch" data-color="#1e1e1e" style="background:#1e1e1e" title="어두운 배경"></div>
+    </div>
+    <div class="bg-custom-row">
+      <label for="custom-bg-color">직접 선택</label>
+      <input type="color" class="tb-input-color" id="custom-bg-color" value="#ffffff" title="직접 배경색 선택">
+      <button class="btn btn-ghost" id="apply-custom-bg" type="button">적용</button>
     </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" id="bgcolor-cancel">닫기</button>
@@ -849,7 +856,7 @@ let currentNoteId = null, currentView = 'all';
 let searchQuery = '', sortMode = 'newest';
 let autosaveTimer = null, autosaveInterval = 10;
 let saveTimeout = null, isDirty = false;
-let settings = { theme: 'light', font: "'Noto Sans KR', sans-serif", size: '14px', autosave: 10 };
+let settings = { theme: 'light', font: 'Noto Sans KR', size: '14px', autosave: 10 };
 let pendingDeleteId = null, pendingPermDeleteId = null;
 
 // ── Load / Save ──
@@ -879,6 +886,62 @@ function fmtDate(ts) {
 function stripHtml(html) { const t = document.createElement('div'); t.innerHTML = html; return t.textContent || ''; }
 function countWords(text) { const c = text.trim(); if (!c) return 0; return c.split(/\s+/).filter(w => w.length > 0).length; }
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return escHtml(s).replace(/'/g,'&#39;'); }
+function normalizeFontFamily(value) {
+  const font = (value || '').trim();
+  return font || 'Noto Sans KR';
+}
+function normalizePx(value, fallback = '14px') {
+  const raw = String(value || '').trim();
+  const num = parseFloat(raw.replace('px', ''));
+  if (!Number.isFinite(num)) return fallback;
+  return Math.max(8, Math.min(120, num)) + 'px';
+}
+function pxNumber(value, fallback = 14) {
+  const num = parseFloat(String(value || '').replace('px', ''));
+  return Number.isFinite(num) ? num : fallback;
+}
+function cssFontFamily(value) {
+  return normalizeFontFamily(value).split(',').map(part => {
+    const name = part.trim();
+    if (!name) return '';
+    if (/^['"].*['"]$/.test(name) || /^(serif|sans-serif|monospace|cursive|fantasy|system-ui|inherit|initial|unset)$/i.test(name)) return name;
+    return `'${name.replace(/'/g, "\\'")}'`;
+  }).filter(Boolean).join(', ');
+}
+const LEGACY_BG_COLORS = {
+  'note-bg-yellow': '#fefce8',
+  'note-bg-blue': '#eff6ff',
+  'note-bg-green': '#f0fdf4',
+  'note-bg-pink': '#fdf2f8',
+  'note-bg-purple': '#faf5ff',
+  'note-bg-slate': '#f8fafc',
+  'note-bg-dark': '#1e1e1e'
+};
+function getNoteBgColor(note) {
+  return note?.bgColor || LEGACY_BG_COLORS[note?.bgClass] || '';
+}
+
+function hexToRgb(hex) {
+  const m = String(hex || '').trim().match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
+}
+function readableTextColor(bgColor) {
+  const rgb = hexToRgb(bgColor);
+  if (!rgb) return '#171717';
+  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return luminance < 0.45 ? '#e5e5e5' : '#171717';
+}
+function applyNoteBackground(note) {
+  const ed = document.getElementById('note-editor');
+  const color = getNoteBgColor(note);
+  ed.className = '';
+  ed.style.backgroundColor = color || '';
+  ed.style.color = color ? readableTextColor(color) : '';
+  const indicator = document.getElementById('note-bg-indicator');
+  if (indicator) indicator.style.background = color || '#ffffff';
+}
+
 function toast(msg) {
   const el = document.createElement('div');
   el.className = 'toast'; el.textContent = msg;
@@ -906,19 +969,19 @@ function applySettings() {
   const sfont = document.getElementById('s-font');
   if (sfont) sfont.value = settings.font;
   const ssize = document.getElementById('s-size');
-  if (ssize) ssize.value = settings.size;
+  if (ssize) ssize.value = pxNumber(settings.size);
   const sauto = document.getElementById('s-autosave');
   if (sauto) sauto.value = settings.autosave;
 
   autosaveInterval = parseInt(settings.autosave) || 10;
 
   const ed = document.getElementById('note-editor');
-  if (ed) { ed.style.fontFamily = settings.font; ed.style.fontSize = settings.size; }
+  if (ed) { ed.style.fontFamily = cssFontFamily(settings.font); ed.style.fontSize = settings.size; }
 
   const selFont = document.getElementById('sel-font');
-  if (selFont) selFont.value = settings.font;
+  if (selFont) selFont.value = normalizeFontFamily(settings.font);
   const selSize = document.getElementById('sel-size');
-  if (selSize) selSize.value = settings.size;
+  if (selSize) selSize.value = pxNumber(settings.size);
 
   document.getElementById('autosave-info').textContent = `자동저장 ${autosaveInterval}초`;
   startAutosave();
@@ -934,14 +997,14 @@ document.getElementById('btn-theme').onclick = () => {
 // ── Settings modal ──
 document.getElementById('btn-settings').onclick = () => {
   document.getElementById('s-font').value = settings.font;
-  document.getElementById('s-size').value = settings.size;
+  document.getElementById('s-size').value = pxNumber(settings.size);
   document.getElementById('s-autosave').value = settings.autosave;
   document.getElementById('modal-settings').style.display = 'flex';
 };
 document.getElementById('settings-cancel').onclick = () => { document.getElementById('modal-settings').style.display = 'none'; };
 document.getElementById('settings-save').onclick = () => {
-  settings.font     = document.getElementById('s-font').value;
-  settings.size     = document.getElementById('s-size').value;
+  settings.font     = normalizeFontFamily(document.getElementById('s-font').value);
+  settings.size     = normalizePx(document.getElementById('s-size').value, settings.size);
   settings.autosave = parseInt(document.getElementById('s-autosave').value) || 10;
   saveSettings(); applySettings();
   document.getElementById('modal-settings').style.display = 'none';
@@ -950,7 +1013,7 @@ document.getElementById('settings-save').onclick = () => {
 
 // ── Create note ──
 function createNote() {
-  const note = { id: uid(), title: '', content: '', bgClass: '', pinned: false, favorite: false, createdAt: Date.now(), modifiedAt: Date.now() };
+  const note = { id: uid(), title: '', content: '', bgClass: '', bgColor: '', pinned: false, favorite: false, createdAt: Date.now(), modifiedAt: Date.now() };
   notes.unshift(note); saveData(); renderNoteList(); openNote(note.id);
   document.getElementById('note-title-input').focus();
 }
@@ -967,10 +1030,9 @@ function openNote(id) {
   document.getElementById('note-title-input').value = note.title || '';
   const ed = document.getElementById('note-editor');
   ed.innerHTML = note.content || '';
-  ed.className = '';
-  if (note.bgClass) ed.classList.add(note.bgClass);
+  applyNoteBackground(note);
   updateMeta(note);
-  ed.style.fontFamily = settings.font;
+  ed.style.fontFamily = cssFontFamily(settings.font);
   ed.style.fontSize   = settings.size;
   setSaveDot(true);
   renderNoteList();
@@ -1268,13 +1330,15 @@ document.getElementById('cmd-alignr').onclick    = () => execCmd('justifyRight')
 document.getElementById('cmd-ul').onclick        = () => execCmd('insertUnorderedList');
 document.getElementById('cmd-ol').onclick        = () => execCmd('insertOrderedList');
 
-document.getElementById('sel-font').addEventListener('change', e => { execCmd('fontName', e.target.value); });
+document.getElementById('sel-font').addEventListener('change', e => { execCmd('fontName', normalizeFontFamily(e.target.value)); });
 document.getElementById('sel-size').addEventListener('change', e => {
+  const size = normalizePx(e.target.value, settings.size);
+  e.target.value = pxNumber(size);
   execCmd('fontSize', '7');
   document.getElementById('note-editor').querySelectorAll('font[size="7"]').forEach(el => {
-    el.removeAttribute('size'); el.style.fontSize = e.target.value;
+    el.removeAttribute('size'); el.style.fontSize = size;
   });
-  isDirty = true; setSaveDot(false);
+  isDirty = true; setSaveDot(false); scheduleAutosave();
 });
 document.getElementById('color-text').addEventListener('input',  e => execCmd('foreColor', e.target.value));
 document.getElementById('color-text').addEventListener('change', e => execCmd('foreColor', e.target.value));
@@ -1305,20 +1369,26 @@ document.getElementById('link-confirm').onclick = () => {
 };
 
 // ── BG color ──
-document.getElementById('cmd-bgcolor').onclick = () => { document.getElementById('modal-bgcolor').style.display = 'flex'; };
+function setCurrentNoteBackground(color) {
+  if (!currentNoteId) { toast('메모를 먼저 선택하세요'); return; }
+  const note = notes.find(n => n.id === currentNoteId); if (!note) return;
+  note.bgClass = '';
+  note.bgColor = color || '';
+  applyNoteBackground(note);
+  saveData();
+  document.getElementById('modal-bgcolor').style.display = 'none';
+  toast(note.bgColor ? '메모 배경색 변경됨' : '메모 배경색 초기화됨');
+}
+document.getElementById('cmd-bgcolor').onclick = () => {
+  const note = notes.find(n => n.id === currentNoteId);
+  document.getElementById('custom-bg-color').value = getNoteBgColor(note) || '#ffffff';
+  document.getElementById('modal-bgcolor').style.display = 'flex';
+};
 document.getElementById('bgcolor-cancel').onclick = () => { document.getElementById('modal-bgcolor').style.display = 'none'; };
 document.querySelectorAll('.bg-swatch').forEach(sw => {
-  sw.addEventListener('click', () => {
-    if (!currentNoteId) { toast('메모를 먼저 선택하세요'); return; }
-    const note = notes.find(n => n.id === currentNoteId); if (!note) return;
-    note.bgClass = sw.dataset.class;
-    const ed = document.getElementById('note-editor');
-    ed.className = ''; if (note.bgClass) ed.classList.add(note.bgClass);
-    saveData();
-    document.getElementById('modal-bgcolor').style.display = 'none';
-    toast(note.bgClass ? '배경색 변경됨' : '배경색 초기화됨');
-  });
+  sw.addEventListener('click', () => setCurrentNoteBackground(sw.dataset.color || ''));
 });
+document.getElementById('apply-custom-bg').onclick = () => setCurrentNoteBackground(document.getElementById('custom-bg-color').value);
 
 // ── Export modal ──
 document.getElementById('btn-export').onclick = () => { document.getElementById('modal-export').style.display = 'flex'; };
@@ -1339,10 +1409,11 @@ document.getElementById('ex-txt').onclick = () => {
 
 document.getElementById('ex-html').onclick = () => {
   const note = getExportNote(); if (!note) return;
+  const bgColor = getNoteBgColor(note) || '#ffffff';
+  const fontFamily = cssFontFamily(settings.font);
   const html = `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="UTF-8"><title>${escHtml(note.title||'메모')}</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-<style>body{font-family:'Noto Sans KR',sans-serif;max-width:720px;margin:40px auto;padding:0 24px;line-height:1.8;color:#171717}h1{font-size:24px;margin-bottom:8px}hr{border:none;border-top:1px solid #e5e5e3;margin:14px 0}.meta{color:#a3a3a3;font-size:12px}</style>
+<style>body{font-family:${fontFamily},sans-serif;max-width:720px;margin:40px auto;padding:32px 40px;line-height:1.8;color:#171717;background:${bgColor}}h1{font-size:24px;margin-bottom:8px}hr{border:none;border-top:1px solid #e5e5e3;margin:14px 0}.meta{color:#737373;font-size:12px}</style>
 </head><body>
 <h1>${escHtml(note.title||'제목 없음')}</h1>
 <p class="meta">작성 ${fmtDate(note.createdAt)} &nbsp;|&nbsp; 수정 ${fmtDate(note.modifiedAt)}</p>
@@ -1370,7 +1441,7 @@ document.getElementById('ex-png').onclick = () => {
 
   // 콘텐츠 높이 측정
   const tempDiv = document.createElement('div');
-  tempDiv.style.cssText = `position:fixed;top:-9999px;left:0;width:${innerW}px;font-family:${settings.font};font-size:${settings.size};line-height:1.8;word-break:break-word;`;
+  tempDiv.style.cssText = `position:fixed;top:-9999px;left:0;width:${innerW}px;font-family:${cssFontFamily(settings.font)};font-size:${settings.size};line-height:1.8;word-break:break-word;`;
   tempDiv.innerHTML = note.content || '';
   document.body.appendChild(tempDiv);
   const contentH = tempDiv.offsetHeight;
@@ -1384,14 +1455,15 @@ document.getElementById('ex-png').onclick = () => {
   canvas.height = H * scale;
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
-  ctx.fillStyle = '#ffffff';
+  const bgColor = getNoteBgColor(note) || '#ffffff';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, W, H);
 
   let y = pad;
 
   if (includeTitle) {
-    ctx.fillStyle = '#171717';
-    ctx.font = `bold 20px "Noto Sans KR", sans-serif`;
+    ctx.fillStyle = readableTextColor(bgColor);
+    ctx.font = `bold 20px ${cssFontFamily(settings.font)}, sans-serif`;
     ctx.fillText(note.title || '제목 없음', pad, y + 22);
     ctx.strokeStyle = '#e5e5e3';
     ctx.lineWidth = 1;
@@ -1403,8 +1475,8 @@ document.getElementById('ex-png').onclick = () => {
   }
 
   const lines = stripHtml(note.content || '').split('\n');
-  ctx.fillStyle = '#171717';
-  ctx.font = `14px "Noto Sans KR", sans-serif`;
+  ctx.fillStyle = readableTextColor(bgColor);
+  ctx.font = `${settings.size} ${cssFontFamily(settings.font)}, sans-serif`;
   lines.forEach(line => {
     const chars = line.split(''); let cur = '';
     for (const ch of chars) {
