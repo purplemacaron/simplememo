@@ -574,20 +574,21 @@
           <option value="sans-serif" label="브라우저 기본 sans-serif">
           <option value="monospace" label="브라우저 기본 monospace">
         </datalist>
-        <select class="tb-select" id="sel-size" style="width:88px" title="글꼴 크기 선택" aria-label="글꼴 크기">
-          <option value="10">10px</option>
-          <option value="12">12px</option>
-          <option value="14">14px</option>
-          <option value="16">16px</option>
-          <option value="18">18px</option>
-          <option value="20">20px</option>
-          <option value="24">24px</option>
-          <option value="28">28px</option>
-          <option value="32">32px</option>
-          <option value="40">40px</option>
-          <option value="48">48px</option>
-          <option value="64">64px</option>
-        </select>
+        <input class="tb-field" id="sel-size" type="number" list="size-options" min="8" max="120" step="1" value="14" style="width:88px" title="글꼴 크기를 선택하거나 직접 입력" aria-label="글꼴 크기(px)">
+        <datalist id="size-options">
+          <option value="10" label="10px">
+          <option value="12" label="12px">
+          <option value="14" label="14px">
+          <option value="16" label="16px">
+          <option value="18" label="18px">
+          <option value="20" label="20px">
+          <option value="24" label="24px">
+          <option value="28" label="28px">
+          <option value="32" label="32px">
+          <option value="40" label="40px">
+          <option value="48" label="48px">
+          <option value="64" label="64px">
+        </datalist>
       </div>
       <div class="toolbar-sep"></div>
 
@@ -748,20 +749,7 @@
       <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:-8px">권장 목록은 재배포 부담이 적은 오픈 라이선스 글꼴과 시스템/브라우저 기본 글꼴입니다. 직접 입력한 글꼴은 기기에 설치되어 있거나 별도로 허용된 라이선스인지 확인하세요.</p>
       <div class="setting-row">
         <label>글꼴 크기</label>
-        <select id="s-size" style="width:82px" aria-label="글꼴 크기">
-          <option value="10">10px</option>
-          <option value="12">12px</option>
-          <option value="14">14px</option>
-          <option value="16">16px</option>
-          <option value="18">18px</option>
-          <option value="20">20px</option>
-          <option value="24">24px</option>
-          <option value="28">28px</option>
-          <option value="32">32px</option>
-          <option value="40">40px</option>
-          <option value="48">48px</option>
-          <option value="64">64px</option>
-        </select>
+        <input type="number" id="s-size" list="size-options" min="8" max="120" step="1" value="14" style="width:82px" aria-label="글꼴 크기(px)">
       </div>
       <div class="setting-row">
         <label>자동 저장 주기 (초)</label>
@@ -1356,14 +1344,19 @@ document.getElementById('cmd-ul').onclick        = () => execCmd('insertUnordere
 document.getElementById('cmd-ol').onclick        = () => execCmd('insertOrderedList');
 
 document.getElementById('sel-font').addEventListener('change', e => { execCmd('fontName', normalizeFontFamily(e.target.value)); });
-document.getElementById('sel-size').addEventListener('change', e => {
-  const size = normalizePx(e.target.value, settings.size);
-  e.target.value = pxNumber(size);
+function applySelectedFontSize(input) {
+  const size = normalizePx(input.value, settings.size);
+  input.value = pxNumber(size);
   execCmd('fontSize', '7');
   document.getElementById('note-editor').querySelectorAll('font[size="7"]').forEach(el => {
     el.removeAttribute('size'); el.style.fontSize = size;
   });
   isDirty = true; setSaveDot(false); scheduleAutosave();
+}
+const selSizeInput = document.getElementById('sel-size');
+selSizeInput.addEventListener('change', e => applySelectedFontSize(e.target));
+selSizeInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); applySelectedFontSize(e.target); }
 });
 document.getElementById('color-text').addEventListener('input',  e => execCmd('foreColor', e.target.value));
 document.getElementById('color-text').addEventListener('change', e => execCmd('foreColor', e.target.value));
@@ -1459,68 +1452,104 @@ document.getElementById('ex-md').onclick = () => {
 };
 
 // ── PNG export (제목 포함 토글) ──
+function buildPngExportNode(note, includeTitle, width, pad) {
+  const bgColor = getNoteBgColor(note) || '#ffffff';
+  const textColor = readableTextColor(bgColor);
+  const root = document.createElement('div');
+  root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+  root.style.cssText = [
+    `width:${width}px`,
+    `padding:${pad}px`,
+    `background:${bgColor}`,
+    `color:${textColor}`,
+    `font-family:${cssFontFamily(settings.font)}, sans-serif`,
+    `font-size:${settings.size}`,
+    'line-height:1.8',
+    'word-break:break-word',
+    'box-sizing:border-box'
+  ].join(';');
+
+  const style = document.createElement('style');
+  style.textContent = `
+    * { box-sizing: border-box; }
+    h1 { margin: 0 0 8px; font-size: 24px; line-height: 1.35; color: inherit; }
+    hr { border: none; border-top: 1px solid #e5e5e3; margin: 14px 0 18px; }
+    ul, ol { padding-left: 24px; margin: 0.6em 0; }
+    p, div { margin-top: 0; }
+    a { color: #2563eb; text-decoration: underline; }
+    img { max-width: 100%; height: auto; }
+  `;
+  root.appendChild(style);
+
+  if (includeTitle) {
+    const title = document.createElement('h1');
+    title.textContent = note.title || '제목 없음';
+    root.appendChild(title);
+    root.appendChild(document.createElement('hr'));
+  }
+
+  const content = document.createElement('div');
+  content.innerHTML = note.content || '';
+  root.appendChild(content);
+  return root;
+}
+
+function serializeNodeForSvg(node) {
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll('br').forEach(br => br.textContent = '');
+  return new XMLSerializer().serializeToString(clone);
+}
+
 document.getElementById('ex-png').onclick = () => {
   const note = getExportNote(); if (!note) return;
   const includeTitle = document.getElementById('png-include-title').checked;
-  const scale = 2, W = 720, pad = 48, innerW = W - pad * 2;
+  const scale = 2, W = 720, pad = 48;
 
-  // 콘텐츠 높이 측정
-  const tempDiv = document.createElement('div');
-  tempDiv.style.cssText = `position:fixed;top:-9999px;left:0;width:${innerW}px;font-family:${cssFontFamily(settings.font)};font-size:${settings.size};line-height:1.8;word-break:break-word;`;
-  tempDiv.innerHTML = note.content || '';
-  document.body.appendChild(tempDiv);
-  const contentH = tempDiv.offsetHeight;
-  document.body.removeChild(tempDiv);
+  const exportNode = buildPngExportNode(note, includeTitle, W, pad);
+  exportNode.style.position = 'fixed';
+  exportNode.style.left = '-9999px';
+  exportNode.style.top = '0';
+  document.body.appendChild(exportNode);
+  const H = Math.max(120, Math.ceil(exportNode.offsetHeight));
+  document.body.removeChild(exportNode);
+  exportNode.style.position = '';
+  exportNode.style.left = '';
+  exportNode.style.top = '';
+  exportNode.style.minHeight = `${H}px`;
 
-  const headerH = includeTitle ? 56 : 0;
-  const H = pad + headerH + contentH + pad;
+  const serialized = serializeNodeForSvg(exportNode);
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  <foreignObject width="100%" height="100%">${serialized}</foreignObject>
+</svg>`;
+  const svgUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+  const img = new Image();
 
-  const canvas = document.createElement('canvas');
-  canvas.width  = W * scale;
-  canvas.height = H * scale;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(scale, scale);
-  const bgColor = getNoteBgColor(note) || '#ffffff';
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, W, H);
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width  = W * scale;
+    canvas.height = H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, W, H);
+    URL.revokeObjectURL(svgUrl);
 
-  let y = pad;
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (note.title || '메모') + '.png';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  };
 
-  if (includeTitle) {
-    ctx.fillStyle = readableTextColor(bgColor);
-    ctx.font = `bold 20px ${cssFontFamily(settings.font)}, sans-serif`;
-    ctx.fillText(note.title || '제목 없음', pad, y + 22);
-    ctx.strokeStyle = '#e5e5e3';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(pad, y + 36);
-    ctx.lineTo(W - pad, y + 36);
-    ctx.stroke();
-    y += headerH;
-  }
+  img.onerror = () => {
+    URL.revokeObjectURL(svgUrl);
+    toast('PNG 저장에 실패했습니다');
+  };
 
-  const lines = stripHtml(note.content || '').split('\n');
-  ctx.fillStyle = readableTextColor(bgColor);
-  ctx.font = `${settings.size} ${cssFontFamily(settings.font)}, sans-serif`;
-  lines.forEach(line => {
-    const chars = line.split(''); let cur = '';
-    for (const ch of chars) {
-      const test = cur + ch;
-      if (ctx.measureText(test).width > innerW) { ctx.fillText(cur, pad, y); y += 24; cur = ch; }
-      else cur = test;
-    }
-    if (cur) { ctx.fillText(cur, pad, y); y += 24; }
-    if (!line) y += 6;
-  });
-
-  canvas.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = (note.title || '메모') + '.png';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
+  img.src = svgUrl;
   document.getElementById('modal-export').style.display = 'none';
   toast('PNG 저장됨');
 };
