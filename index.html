@@ -561,21 +561,34 @@
       <div class="toolbar-sep"></div>
 
       <div class="toolbar-group">
-        <input class="tb-field" id="sel-font" list="font-options" value="Noto Sans KR" placeholder="글꼴" style="width:128px" title="글꼴 직접 입력">
+        <input class="tb-field" id="sel-font" list="font-options" value="Noto Sans KR" placeholder="글꼴" style="width:148px" title="오픈 라이선스/시스템 글꼴 선택 또는 직접 입력">
         <datalist id="font-options">
-          <option value="Noto Sans KR">
-          <option value="Noto Serif KR">
-          <option value="Nanum Gothic">
-          <option value="Nanum Myeongjo">
-          <option value="Gowun Dodum">
-          <option value="IBM Plex Mono">
-          <option value="Georgia">
-          <option value="Arial">
-          <option value="serif">
-          <option value="sans-serif">
-          <option value="monospace">
+          <option value="Noto Sans KR" label="오픈 라이선스 권장">
+          <option value="Noto Serif KR" label="오픈 라이선스 권장">
+          <option value="Nanum Gothic" label="오픈 라이선스 권장">
+          <option value="Nanum Myeongjo" label="오픈 라이선스 권장">
+          <option value="Gowun Dodum" label="오픈 라이선스 권장">
+          <option value="IBM Plex Mono" label="오픈 라이선스 권장">
+          <option value="system-ui" label="기기 기본 시스템 글꼴">
+          <option value="serif" label="브라우저 기본 serif">
+          <option value="sans-serif" label="브라우저 기본 sans-serif">
+          <option value="monospace" label="브라우저 기본 monospace">
         </datalist>
-        <input class="tb-field" id="sel-size" type="number" min="8" max="120" step="1" value="14" style="width:58px" title="글자 크기(px) 직접 입력">
+        <input class="tb-field" id="sel-size" type="number" list="font-size-options" min="8" max="120" step="1" value="14" style="width:64px" title="글자 크기(px) 선택 또는 직접 입력">
+        <datalist id="font-size-options">
+          <option value="10" label="작게">
+          <option value="12" label="본문 작게">
+          <option value="14" label="기본">
+          <option value="16" label="본문 크게">
+          <option value="18" label="소제목">
+          <option value="20" label="제목">
+          <option value="24" label="큰 제목">
+          <option value="28" label="강조 제목">
+          <option value="32" label="표지 제목">
+          <option value="40" label="대형">
+          <option value="48" label="포스터">
+          <option value="64" label="초대형">
+        </datalist>
       </div>
       <div class="toolbar-sep"></div>
 
@@ -731,12 +744,12 @@
     <div class="settings-grid">
       <div class="setting-row">
         <label>기본 글꼴</label>
-        <input type="text" id="s-font" list="font-options" value="Noto Sans KR" placeholder="예: Noto Sans KR" style="width:180px">
+        <input type="text" id="s-font" list="font-options" value="Noto Sans KR" placeholder="예: Noto Sans KR" style="width:200px">
       </div>
-      <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:-8px">설치된 글꼴 또는 오픈 라이선스 글꼴 이름을 직접 입력해 사용할 수 있습니다.</p>
+      <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:-8px">권장 목록은 재배포 부담이 적은 오픈 라이선스 글꼴과 시스템/브라우저 기본 글꼴입니다. 직접 입력한 글꼴은 기기에 설치되어 있거나 별도로 허용된 라이선스인지 확인하세요.</p>
       <div class="setting-row">
         <label>기본 글자 크기</label>
-        <input type="number" id="s-size" min="8" max="120" step="1" value="14" style="width:72px">
+        <input type="number" id="s-size" list="font-size-options" min="8" max="120" step="1" value="14" style="width:82px">
       </div>
       <div class="setting-row">
         <label>자동 저장 주기 (초)</label>
