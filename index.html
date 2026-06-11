@@ -574,21 +574,20 @@
           <option value="sans-serif" label="브라우저 기본 sans-serif">
           <option value="monospace" label="브라우저 기본 monospace">
         </datalist>
-        <input class="tb-field" id="sel-size" type="number" list="font-size-options" min="8" max="120" step="1" value="14" style="width:64px" title="글자 크기(px) 선택 또는 직접 입력">
-        <datalist id="font-size-options">
-          <option value="10" label="작게">
-          <option value="12" label="본문 작게">
-          <option value="14" label="기본">
-          <option value="16" label="본문 크게">
-          <option value="18" label="소제목">
-          <option value="20" label="제목">
-          <option value="24" label="큰 제목">
-          <option value="28" label="강조 제목">
-          <option value="32" label="표지 제목">
-          <option value="40" label="대형">
-          <option value="48" label="포스터">
-          <option value="64" label="초대형">
-        </datalist>
+        <select class="tb-select" id="sel-size" style="width:88px" title="글꼴 크기 선택" aria-label="글꼴 크기">
+          <option value="10">10px</option>
+          <option value="12">12px</option>
+          <option value="14">14px</option>
+          <option value="16">16px</option>
+          <option value="18">18px</option>
+          <option value="20">20px</option>
+          <option value="24">24px</option>
+          <option value="28">28px</option>
+          <option value="32">32px</option>
+          <option value="40">40px</option>
+          <option value="48">48px</option>
+          <option value="64">64px</option>
+        </select>
       </div>
       <div class="toolbar-sep"></div>
 
@@ -748,8 +747,21 @@
       </div>
       <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:-8px">권장 목록은 재배포 부담이 적은 오픈 라이선스 글꼴과 시스템/브라우저 기본 글꼴입니다. 직접 입력한 글꼴은 기기에 설치되어 있거나 별도로 허용된 라이선스인지 확인하세요.</p>
       <div class="setting-row">
-        <label>기본 글자 크기</label>
-        <input type="number" id="s-size" list="font-size-options" min="8" max="120" step="1" value="14" style="width:82px">
+        <label>글꼴 크기</label>
+        <select id="s-size" style="width:82px" aria-label="글꼴 크기">
+          <option value="10">10px</option>
+          <option value="12">12px</option>
+          <option value="14">14px</option>
+          <option value="16">16px</option>
+          <option value="18">18px</option>
+          <option value="20">20px</option>
+          <option value="24">24px</option>
+          <option value="28">28px</option>
+          <option value="32">32px</option>
+          <option value="40">40px</option>
+          <option value="48">48px</option>
+          <option value="64">64px</option>
+        </select>
       </div>
       <div class="setting-row">
         <label>자동 저장 주기 (초)</label>
