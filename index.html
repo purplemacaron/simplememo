@@ -55,10 +55,8 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; font-family: var(--font-base); font-size: 14px; color: var(--text-primary); background: var(--bg); overflow: hidden; }
 
-  /* ── SHELL ── */
   #app { display: flex; height: 100vh; position: relative; }
 
-  /* ── SIDEBAR ── */
   #sidebar {
     width: 260px; min-width: 200px; max-width: 360px;
     background: var(--sidebar-bg);
@@ -94,7 +92,6 @@
   .icon-btn:hover { background: var(--border-light); color: var(--text-primary); }
   .icon-btn.active { color: var(--accent); background: var(--accent-light); }
 
-  /* Search */
   #search-bar { padding: 8px 10px; border-bottom: 1px solid var(--border-light); }
   .search-wrap { position: relative; display: flex; align-items: center; }
   .search-wrap svg { position: absolute; left: 8px; color: var(--text-muted); pointer-events: none; }
@@ -108,7 +105,6 @@
   #search-input:focus { border-color: var(--accent); }
   #search-input::placeholder { color: var(--text-muted); }
 
-  /* Nav */
   #sidebar-nav {
     padding: 6px 8px; border-bottom: 1px solid var(--border-light);
     display: flex; gap: 2px;
@@ -127,7 +123,6 @@
   .nav-btn:hover { background: var(--border-light); color: var(--text-primary); }
   .nav-btn.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
 
-  /* Sort */
   #sort-bar {
     padding: 5px 10px; display: flex; align-items: center; gap: 6px;
     border-bottom: 1px solid var(--border-light);
@@ -140,7 +135,6 @@
     font-family: var(--font-base); font-size: 11px; outline: none; cursor: pointer;
   }
 
-  /* Note list */
   #note-list-wrap { flex: 1; overflow-y: auto; padding: 6px; }
   #note-list-wrap::-webkit-scrollbar { width: 3px; }
   #note-list-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -168,16 +162,13 @@
   .empty-state { padding: 28px 14px; text-align: center; color: var(--text-muted); }
   .empty-state p { font-size: 12px; margin-top: 8px; }
 
-  /* Sidebar footer */
   #sidebar-footer {
     padding: 8px 10px; border-top: 1px solid var(--border-light);
     display: flex; gap: 4px; align-items: center;
   }
 
-  /* ── MAIN ── */
   #main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
 
-  /* Toolbar */
   #toolbar {
     background: var(--panel-bg);
     border-bottom: 1px solid var(--border);
@@ -225,7 +216,6 @@
     padding: 2px; cursor: pointer; background: none;
   }
 
-  /* Editor */
   #editor-wrap {
     flex: 1; overflow-y: auto; padding: 28px 32px;
     display: flex; justify-content: center;
@@ -266,7 +256,6 @@
   #note-editor ul, #note-editor ol { padding-left: 20px; }
   #note-editor a { color: var(--accent); text-decoration: underline; }
 
-  /* No-note */
   #no-note {
     flex: 1; display: flex; align-items: center; justify-content: center;
     flex-direction: column; gap: 10px; color: var(--text-muted);
@@ -282,7 +271,6 @@
   }
   #no-note button:hover { background: var(--accent-hover); }
 
-  /* Status bar */
   #status-bar {
     background: var(--panel-bg); border-top: 1px solid var(--border);
     padding: 4px 14px; display: flex; align-items: center;
@@ -293,7 +281,6 @@
   .dot.saved { background: var(--success); }
   .dot.unsaved { background: var(--warn); }
 
-  /* ── MODALS ── */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.4);
     display: flex; align-items: center; justify-content: center;
@@ -326,7 +313,6 @@
   .btn-ghost { background: var(--border-light); color: var(--text-secondary); }
   .btn-ghost:hover { background: var(--border); }
 
-  /* Settings modal */
   .settings-grid { display: flex; flex-direction: column; gap: 14px; }
   .setting-row { display: flex; align-items: center; gap: 10px; }
   .setting-row label { flex: 1; font-size: 13px; color: var(--text-secondary); }
@@ -350,7 +336,6 @@
   .toggle input:checked + .toggle-slider { background: var(--accent); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
 
-  /* Link modal */
   .modal-input {
     width: 100%; padding: 8px 10px;
     border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -360,7 +345,6 @@
   }
   .modal-input:focus { border-color: var(--accent); }
 
-  /* Toast */
   #toast-container {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     z-index: 9999; display: flex; flex-direction: column;
@@ -375,7 +359,6 @@
   @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes toastOut { to { opacity: 0; transform: translateY(8px); } }
 
-  /* Context menu */
   .ctx-menu {
     position: fixed; background: var(--panel-bg);
     border: 1px solid var(--border); border-radius: var(--radius-md);
@@ -392,7 +375,6 @@
   .ctx-item.danger:hover { background: var(--danger-light); }
   .ctx-sep { height: 1px; background: var(--border-light); margin: 3px 0; }
 
-  /* Note background colors */
   .note-bg-yellow { background: #fefce8 !important; }
   .note-bg-blue   { background: #eff6ff !important; }
   .note-bg-green  { background: #f0fdf4 !important; }
@@ -406,7 +388,6 @@
   [data-theme="dark"] .note-bg-pink   { background: #280d1e !important; }
   [data-theme="dark"] .note-bg-purple { background: #1a0a2e !important; }
 
-  /* Export modal */
   .export-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
   .export-option {
     display: flex; align-items: center; gap: 12px;
@@ -425,7 +406,18 @@
   .export-option-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
   .export-option-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 
-  /* Mobile */
+  /* PNG title toggle row */
+  .png-title-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px 8px;
+    border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    background: var(--bg);
+    margin-top: -9px;
+    font-size: 11px; color: var(--text-secondary);
+  }
+  .png-title-row label { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; }
+
   #mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 99; }
   .menu-toggle { display: none; }
   @media (max-width: 680px) {
@@ -439,11 +431,9 @@
     #editor-wrap { padding: 16px; }
   }
 
-  /* Resize handle */
   #resize-handle { width: 3px; cursor: col-resize; background: transparent; flex-shrink: 0; z-index: 101; transition: background .1s; }
   #resize-handle:hover { background: var(--accent); }
 
-  /* Trash timer badge */
   .trash-days { font-size: 9px; background: var(--danger-light); color: var(--danger); padding: 1px 4px; border-radius: 3px; }
 
   * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
@@ -506,6 +496,7 @@
 
     <div id="sidebar-footer">
       <span id="note-count" style="font-size:11px;color:var(--text-muted);flex:1"></span>
+      <!-- 라이트 모드일 때 달(클릭→다크), 다크 모드일 때 해(클릭→라이트) -->
       <button class="icon-btn" id="btn-theme" title="테마 전환">
         <svg id="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg id="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -740,7 +731,12 @@
   <div class="modal" style="min-width:260px">
     <h3>배경색</h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
-      <div class="bg-swatch" data-class="" style="width:32px;height:32px;background:var(--panel-bg);border-radius:6px;cursor:pointer;border:2px solid var(--border)" title="기본"></div>
+      <!-- 초기화 (X 아이콘) -->
+      <div class="bg-swatch" data-class=""
+           style="width:32px;height:32px;background:var(--panel-bg);border-radius:6px;cursor:pointer;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;"
+           title="배경색 없음">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
       <div class="bg-swatch" data-class="note-bg-yellow" style="width:32px;height:32px;background:#fefce8;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
       <div class="bg-swatch" data-class="note-bg-blue"   style="width:32px;height:32px;background:#eff6ff;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
       <div class="bg-swatch" data-class="note-bg-green"  style="width:32px;height:32px;background:#f0fdf4;border-radius:6px;cursor:pointer;border:2px solid var(--border)"></div>
@@ -787,15 +783,26 @@
           <div class="export-option-desc">Markdown 형식으로 내보내기</div>
         </div>
       </div>
-      <div class="export-option" id="ex-png">
-        <div class="export-option-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+
+      <!-- PNG: 클릭 영역 + 제목 포함 토글 분리 -->
+      <div style="border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;">
+        <div class="export-option" id="ex-png" style="border:none;border-radius:0;">
+          <div class="export-option-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="export-option-info">
+            <div class="export-option-title">이미지 (.png)</div>
+            <div class="export-option-desc">메모를 이미지로 저장</div>
+          </div>
         </div>
-        <div class="export-option-info">
-          <div class="export-option-title">이미지 (.png)</div>
-          <div class="export-option-desc">메모를 이미지로 저장</div>
+        <div style="padding:6px 12px 8px;border-top:1px solid var(--border-light);background:var(--bg);display:flex;align-items:center;gap:6px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);cursor:pointer;user-select:none;">
+            <input type="checkbox" id="png-include-title" checked style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer;">
+            제목 포함
+          </label>
         </div>
       </div>
+
       <div class="export-option" id="ex-json">
         <div class="export-option-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
@@ -866,10 +873,18 @@ function toast(msg) {
 function applySettings() {
   const app = document.getElementById('app');
   app.setAttribute('data-theme', settings.theme);
+
+  // 라이트 모드 → 달 아이콘 표시 (클릭하면 다크로)
+  // 다크 모드  → 해 아이콘 표시 (클릭하면 라이트로)
   const moon = document.getElementById('theme-icon-moon');
   const sun  = document.getElementById('theme-icon-sun');
-  if (settings.theme === 'dark') { moon.style.display = 'none'; sun.style.display = ''; }
-  else { moon.style.display = ''; sun.style.display = 'none'; }
+  if (settings.theme === 'dark') {
+    moon.style.display = 'none';
+    sun.style.display  = '';
+  } else {
+    moon.style.display = '';
+    sun.style.display  = 'none';
+  }
 
   const sdark = document.getElementById('s-dark-mode');
   if (sdark) sdark.checked = settings.theme === 'dark';
@@ -894,10 +909,11 @@ function applySettings() {
   startAutosave();
 }
 
-// ── Theme ──
+// ── Theme toggle (단일 버튼 클릭) ──
 document.getElementById('btn-theme').onclick = () => {
   settings.theme = settings.theme === 'light' ? 'dark' : 'light';
-  saveSettings(); applySettings();
+  saveSettings();
+  applySettings();
 };
 
 // ── Settings modal ──
@@ -910,9 +926,9 @@ document.getElementById('btn-settings').onclick = () => {
 };
 document.getElementById('settings-cancel').onclick = () => { document.getElementById('modal-settings').style.display = 'none'; };
 document.getElementById('settings-save').onclick = () => {
-  settings.theme   = document.getElementById('s-dark-mode').checked ? 'dark' : 'light';
-  settings.font    = document.getElementById('s-font').value;
-  settings.size    = document.getElementById('s-size').value;
+  settings.theme    = document.getElementById('s-dark-mode').checked ? 'dark' : 'light';
+  settings.font     = document.getElementById('s-font').value;
+  settings.size     = document.getElementById('s-size').value;
   settings.autosave = parseInt(document.getElementById('s-autosave').value) || 10;
   saveSettings(); applySettings();
   document.getElementById('modal-settings').style.display = 'none';
@@ -1277,7 +1293,7 @@ document.querySelectorAll('.bg-swatch').forEach(sw => {
     ed.className = ''; if (note.bgClass) ed.classList.add(note.bgClass);
     saveData();
     document.getElementById('modal-bgcolor').style.display = 'none';
-    toast('배경색 변경됨');
+    toast(note.bgClass ? '배경색 변경됨' : '배경색 초기화됨');
   });
 });
 
@@ -1323,30 +1339,49 @@ document.getElementById('ex-md').onclick = () => {
   toast('Markdown 저장됨');
 };
 
+// ── PNG export (제목 포함 토글) ──
 document.getElementById('ex-png').onclick = () => {
   const note = getExportNote(); if (!note) return;
-  const canvas = document.createElement('canvas');
+  const includeTitle = document.getElementById('png-include-title').checked;
   const scale = 2, W = 720, pad = 48, innerW = W - pad * 2;
+
+  // 콘텐츠 높이 측정
   const tempDiv = document.createElement('div');
   tempDiv.style.cssText = `position:fixed;top:-9999px;left:0;width:${innerW}px;font-family:${settings.font};font-size:${settings.size};line-height:1.8;word-break:break-word;`;
   tempDiv.innerHTML = note.content || '';
   document.body.appendChild(tempDiv);
   const contentH = tempDiv.offsetHeight;
   document.body.removeChild(tempDiv);
-  const H = contentH + pad * 3 + 80;
-  canvas.width = W * scale; canvas.height = H * scale;
+
+  const headerH = includeTitle ? 56 : 0;
+  const H = pad + headerH + contentH + pad;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = W * scale;
+  canvas.height = H * scale;
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#171717'; ctx.font = `bold 20px "Noto Sans KR", sans-serif`;
-  ctx.fillText(note.title || '제목 없음', pad, pad + 22);
-  ctx.strokeStyle = '#e5e5e3'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(pad, pad + 36); ctx.lineTo(W - pad, pad + 36); ctx.stroke();
-  ctx.fillStyle = '#a3a3a3'; ctx.font = `12px "Noto Sans KR", sans-serif`;
-  ctx.fillText(`수정: ${fmtDate(note.modifiedAt)}`, pad, pad + 54);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  let y = pad;
+
+  if (includeTitle) {
+    ctx.fillStyle = '#171717';
+    ctx.font = `bold 20px "Noto Sans KR", sans-serif`;
+    ctx.fillText(note.title || '제목 없음', pad, y + 22);
+    ctx.strokeStyle = '#e5e5e3';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad, y + 36);
+    ctx.lineTo(W - pad, y + 36);
+    ctx.stroke();
+    y += headerH;
+  }
+
   const lines = stripHtml(note.content || '').split('\n');
-  ctx.fillStyle = '#171717'; ctx.font = `14px "Noto Sans KR", sans-serif`;
-  let y = pad + 82;
+  ctx.fillStyle = '#171717';
+  ctx.font = `14px "Noto Sans KR", sans-serif`;
   lines.forEach(line => {
     const chars = line.split(''); let cur = '';
     for (const ch of chars) {
@@ -1357,9 +1392,13 @@ document.getElementById('ex-png').onclick = () => {
     if (cur) { ctx.fillText(cur, pad, y); y += 24; }
     if (!line) y += 6;
   });
+
   canvas.toBlob(blob => {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = (note.title||'메모') + '.png'; a.click();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (note.title || '메모') + '.png';
+    a.click();
     URL.revokeObjectURL(url);
   });
   document.getElementById('modal-export').style.display = 'none';
