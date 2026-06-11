@@ -514,6 +514,16 @@
       </button>
 
       <div class="toolbar-group">
+        <button class="tb-btn" id="cmd-undo" title="실행 취소 (Ctrl+Z)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+        </button>
+        <button class="tb-btn" id="cmd-redo" title="다시 실행 (Ctrl+Y)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>
+        </button>
+      </div>
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
         <select class="tb-select" id="sel-font" style="max-width:120px">
           <option value="'Noto Sans KR', sans-serif">본고딕</option>
           <option value="'Noto Serif KR', serif">본명조</option>
@@ -688,10 +698,6 @@
   <div class="modal" style="max-width:420px">
     <h3>설정</h3>
     <div class="settings-grid">
-      <div class="setting-row">
-        <label>다크 모드</label>
-        <label class="toggle"><input type="checkbox" id="s-dark-mode"><span class="toggle-slider"></span></label>
-      </div>
       <div class="setting-row">
         <label>기본 글꼴</label>
         <select id="s-font">
@@ -886,8 +892,6 @@ function applySettings() {
     sun.style.display  = 'none';
   }
 
-  const sdark = document.getElementById('s-dark-mode');
-  if (sdark) sdark.checked = settings.theme === 'dark';
   const sfont = document.getElementById('s-font');
   if (sfont) sfont.value = settings.font;
   const ssize = document.getElementById('s-size');
@@ -918,7 +922,6 @@ document.getElementById('btn-theme').onclick = () => {
 
 // ── Settings modal ──
 document.getElementById('btn-settings').onclick = () => {
-  document.getElementById('s-dark-mode').checked = settings.theme === 'dark';
   document.getElementById('s-font').value = settings.font;
   document.getElementById('s-size').value = settings.size;
   document.getElementById('s-autosave').value = settings.autosave;
@@ -926,7 +929,6 @@ document.getElementById('btn-settings').onclick = () => {
 };
 document.getElementById('settings-cancel').onclick = () => { document.getElementById('modal-settings').style.display = 'none'; };
 document.getElementById('settings-save').onclick = () => {
-  settings.theme    = document.getElementById('s-dark-mode').checked ? 'dark' : 'light';
   settings.font     = document.getElementById('s-font').value;
   settings.size     = document.getElementById('s-size').value;
   settings.autosave = parseInt(document.getElementById('s-autosave').value) || 10;
@@ -1233,8 +1235,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') removeCtxMen
 function execCmd(cmd, val = null) {
   document.getElementById('note-editor').focus();
   document.execCommand(cmd, false, val);
+  updateCurrentMeta();
   isDirty = true; setSaveDot(false); scheduleAutosave();
 }
+document.getElementById('cmd-undo').onclick      = () => execCmd('undo');
+document.getElementById('cmd-redo').onclick      = () => execCmd('redo');
 document.getElementById('cmd-bold').onclick      = () => execCmd('bold');
 document.getElementById('cmd-italic').onclick    = () => execCmd('italic');
 document.getElementById('cmd-underline').onclick = () => execCmd('underline');
@@ -1472,11 +1477,14 @@ document.getElementById('mobile-overlay').onclick = () => {
 // ── Keyboard shortcuts ──
 document.addEventListener('keydown', e => {
   if (e.target.closest('#note-editor')) {
-    if ((e.ctrlKey||e.metaKey) && e.key === 'b') { e.preventDefault(); execCmd('bold'); }
-    if ((e.ctrlKey||e.metaKey) && e.key === 'i') { e.preventDefault(); execCmd('italic'); }
-    if ((e.ctrlKey||e.metaKey) && e.key === 'u') { e.preventDefault(); execCmd('underline'); }
+    const key = e.key.toLowerCase();
+    if ((e.ctrlKey||e.metaKey) && key === 'z' && !e.shiftKey) { e.preventDefault(); execCmd('undo'); }
+    if ((e.ctrlKey||e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) { e.preventDefault(); execCmd('redo'); }
+    if ((e.ctrlKey||e.metaKey) && key === 'b') { e.preventDefault(); execCmd('bold'); }
+    if ((e.ctrlKey||e.metaKey) && key === 'i') { e.preventDefault(); execCmd('italic'); }
+    if ((e.ctrlKey||e.metaKey) && key === 'u') { e.preventDefault(); execCmd('underline'); }
   }
-  if ((e.ctrlKey||e.metaKey) && e.key === 'n') { e.preventDefault(); createNote(); }
+  if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); createNote(); }
 });
 
 // ── Trash cleanup ──
