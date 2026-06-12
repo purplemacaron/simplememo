@@ -277,6 +277,7 @@
   .meta-item { display: flex; align-items: center; gap: 3px; }
 
   #note-editor {
+    position: relative; z-index: 1;
     flex: 1; min-height: 400px;
     outline: none; font-family: var(--font-base);
     font-size: 14px; line-height: 1.8;
@@ -291,21 +292,20 @@
 
   #drawing-board {
     position: relative;
-    width: 100%; min-height: 320px;
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-md);
-    background: rgba(255,255,255,.55);
-    overflow: hidden;
+    width: 100%; min-height: 400px;
+    overflow: visible;
   }
-  [data-theme="dark"] #drawing-board { background: rgba(255,255,255,.03); }
-  #drawing-board.drawing-enabled { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+  #drawing-board.drawing-enabled { box-shadow: inset 0 0 0 2px var(--accent-light); }
   .drawing-hint {
-    position: absolute; top: 10px; left: 12px; z-index: 1;
+    position: absolute; top: 0; right: 0; z-index: 3;
     color: var(--text-muted); font-size: 11px; pointer-events: none;
+    background: var(--bg-primary); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); padding: 3px 7px;
+    display: none;
   }
-  #drawing-board.has-drawing .drawing-hint, #drawing-board.drawing-enabled .drawing-hint { opacity: .55; }
+  #drawing-board.drawing-enabled .drawing-hint { display: block; opacity: .85; }
   #drawing-canvas {
-    position: absolute; inset: 0;
+    position: absolute; inset: 0; z-index: 2;
     width: 100%; height: 100%;
     cursor: default; touch-action: none;
     pointer-events: none;
@@ -716,9 +716,9 @@
             <span id="meta-chars">0</span>자 / <span id="meta-words">0</span>단어
           </span>
         </div>
-        <div id="note-editor" contenteditable="true" data-placeholder="메모를 입력하세요" spellcheck="false"></div>
-        <div id="drawing-board" aria-label="메모 그림판">
-          <div class="drawing-hint">그리기 버튼을 켜고 이 영역에 손글씨나 그림을 그리세요.</div>
+        <div id="drawing-board" aria-label="메모 입력 및 그림 영역">
+          <div id="note-editor" contenteditable="true" data-placeholder="메모를 입력하세요" spellcheck="false"></div>
+          <div class="drawing-hint">메모 칸 위에 바로 그리는 중입니다.</div>
           <canvas id="drawing-canvas"></canvas>
         </div>
       </div>
@@ -1177,6 +1177,7 @@ document.getElementById('note-title-input').addEventListener('input', () => {
 });
 document.getElementById('note-editor').addEventListener('input', () => {
   isDirty = true; setSaveDot(false); updateCurrentMeta(); scheduleAutosave();
+  requestAnimationFrame(() => resizeDrawingCanvas(true));
 });
 
 function scheduleAutosave() {
@@ -1454,13 +1455,20 @@ function setDrawingUi() {
   document.getElementById('draw-toggle').classList.toggle('active', drawingMode);
   document.getElementById('draw-eraser').classList.toggle('active', eraserMode);
 }
-function resizeDrawingCanvas() {
+function resizeDrawingCanvas(preserve = false) {
   const canvas = getDrawingCanvas();
   const board = document.getElementById('drawing-board');
   if (!canvas || !board) return;
   const ratio = window.devicePixelRatio || 1;
   const width = Math.max(1, board.clientWidth);
-  const height = Math.max(320, board.clientHeight);
+  const height = Math.max(400, board.clientHeight);
+  let snapshot = null;
+  if (preserve && hasDrawing && canvas.width && canvas.height) {
+    snapshot = document.createElement('canvas');
+    snapshot.width = canvas.width;
+    snapshot.height = canvas.height;
+    snapshot.getContext('2d').drawImage(canvas, 0, 0);
+  }
   canvas.width = Math.round(width * ratio);
   canvas.height = Math.round(height * ratio);
   canvas.style.width = width + 'px';
@@ -1469,6 +1477,7 @@ function resizeDrawingCanvas() {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  if (snapshot) ctx.drawImage(snapshot, 0, 0, width, height);
 }
 function drawImageOnBoard(dataUrl) {
   if (!dataUrl) return;
@@ -1553,10 +1562,10 @@ getDrawingCanvas().addEventListener('pointerdown', beginDrawing);
 getDrawingCanvas().addEventListener('pointermove', moveDrawing);
 getDrawingCanvas().addEventListener('pointerup', endDrawing);
 getDrawingCanvas().addEventListener('pointercancel', endDrawing);
-window.addEventListener('resize', () => {
-  const data = getDrawingData();
-  loadDrawing(data);
-});
+window.addEventListener('resize', () => resizeDrawingCanvas(true));
+if ('ResizeObserver' in window) {
+  new ResizeObserver(() => resizeDrawingCanvas(true)).observe(document.getElementById('drawing-board'));
+}
 
 // ── Link ──
 let savedSel = null;
