@@ -289,6 +289,29 @@
   #note-editor ul, #note-editor ol { padding-left: 20px; }
   #note-editor a { color: var(--accent); text-decoration: underline; }
 
+  #drawing-board {
+    position: relative;
+    width: 100%; min-height: 320px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,.55);
+    overflow: hidden;
+  }
+  [data-theme="dark"] #drawing-board { background: rgba(255,255,255,.03); }
+  #drawing-board.drawing-enabled { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+  .drawing-hint {
+    position: absolute; top: 10px; left: 12px; z-index: 1;
+    color: var(--text-muted); font-size: 11px; pointer-events: none;
+  }
+  #drawing-board.has-drawing .drawing-hint, #drawing-board.drawing-enabled .drawing-hint { opacity: .55; }
+  #drawing-canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    cursor: default; touch-action: none;
+    pointer-events: none;
+  }
+  #drawing-board.drawing-enabled #drawing-canvas { cursor: crosshair; pointer-events: auto; }
+
   #no-note {
     flex: 1; display: flex; align-items: center; justify-content: center;
     flex-direction: column; gap: 10px; color: var(--text-muted);
@@ -561,34 +584,56 @@
       <div class="toolbar-sep"></div>
 
       <div class="toolbar-group">
-        <input class="tb-field" id="sel-font" list="font-options" value="Noto Sans KR" placeholder="글꼴" style="width:148px" title="오픈 라이선스/시스템 글꼴 선택 또는 직접 입력">
-        <datalist id="font-options">
-          <option value="Noto Sans KR" label="오픈 라이선스 권장">
-          <option value="Noto Serif KR" label="오픈 라이선스 권장">
-          <option value="Nanum Gothic" label="오픈 라이선스 권장">
-          <option value="Nanum Myeongjo" label="오픈 라이선스 권장">
-          <option value="Gowun Dodum" label="오픈 라이선스 권장">
-          <option value="IBM Plex Mono" label="오픈 라이선스 권장">
-          <option value="system-ui" label="기기 기본 시스템 글꼴">
-          <option value="serif" label="브라우저 기본 serif">
-          <option value="sans-serif" label="브라우저 기본 sans-serif">
-          <option value="monospace" label="브라우저 기본 monospace">
-        </datalist>
-        <input class="tb-field" id="sel-size" type="number" list="size-options" min="8" max="120" step="1" value="14" style="width:88px" title="글꼴 크기를 선택하거나 직접 입력" aria-label="글꼴 크기(px)">
-        <datalist id="size-options">
-          <option value="10" label="10px">
-          <option value="12" label="12px">
-          <option value="14" label="14px">
-          <option value="16" label="16px">
-          <option value="18" label="18px">
-          <option value="20" label="20px">
-          <option value="24" label="24px">
-          <option value="28" label="28px">
-          <option value="32" label="32px">
-          <option value="40" label="40px">
-          <option value="48" label="48px">
-          <option value="64" label="64px">
-        </datalist>
+        <select class="tb-select" id="sel-font" style="width:148px" title="글꼴 선택" aria-label="글꼴 선택">
+          <option value="Noto Sans KR">Noto Sans KR</option>
+          <option value="Noto Serif KR">Noto Serif KR</option>
+          <option value="Nanum Gothic">Nanum Gothic</option>
+          <option value="Nanum Myeongjo">Nanum Myeongjo</option>
+          <option value="Gowun Dodum">Gowun Dodum</option>
+          <option value="IBM Plex Mono">IBM Plex Mono</option>
+          <option value="system-ui">기기 기본 글꼴</option>
+          <option value="serif">Serif</option>
+          <option value="sans-serif">Sans-serif</option>
+          <option value="monospace">Monospace</option>
+        </select>
+        <select class="tb-select" id="sel-size" style="width:76px" title="글꼴 크기 선택" aria-label="글꼴 크기(px)">
+          <option value="10">10px</option>
+          <option value="12">12px</option>
+          <option value="14">14px</option>
+          <option value="16">16px</option>
+          <option value="18">18px</option>
+          <option value="20">20px</option>
+          <option value="24">24px</option>
+          <option value="28">28px</option>
+          <option value="32">32px</option>
+          <option value="40">40px</option>
+          <option value="48">48px</option>
+          <option value="64">64px</option>
+        </select>
+      </div>
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <button class="tb-btn" id="draw-toggle" title="그리기 켜기/끄기">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="tb-btn" id="draw-eraser" title="지우개">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 21-4-4L14.5 5.5a2.8 2.8 0 0 1 4 4L7 21Z"/><path d="M14 21H7"/><path d="m12 8 4 4"/></svg>
+        </button>
+        <label class="tb-labeled-control" title="펜 색" style="cursor:pointer">
+          <input type="color" class="tb-input-color" id="draw-color" value="#2563eb" title="펜 색">
+          <span>펜</span>
+        </label>
+        <select class="tb-select" id="draw-size" title="펜 굵기" aria-label="펜 굵기">
+          <option value="2">2px</option>
+          <option value="4" selected>4px</option>
+          <option value="8">8px</option>
+          <option value="12">12px</option>
+          <option value="18">18px</option>
+        </select>
+        <button class="tb-btn" id="draw-clear" title="그림 지우기">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/></svg>
+        </button>
       </div>
       <div class="toolbar-sep"></div>
 
@@ -672,6 +717,10 @@
           </span>
         </div>
         <div id="note-editor" contenteditable="true" data-placeholder="메모를 입력하세요" spellcheck="false"></div>
+        <div id="drawing-board" aria-label="메모 그림판">
+          <div class="drawing-hint">그리기 버튼을 켜고 이 영역에 손글씨나 그림을 그리세요.</div>
+          <canvas id="drawing-canvas"></canvas>
+        </div>
       </div>
     </div>
 
@@ -744,12 +793,36 @@
     <div class="settings-grid">
       <div class="setting-row">
         <label>기본 글꼴</label>
-        <input type="text" id="s-font" list="font-options" value="Noto Sans KR" placeholder="예: Noto Sans KR" style="width:200px">
+        <select id="s-font" style="width:200px" aria-label="기본 글꼴 선택">
+          <option value="Noto Sans KR">Noto Sans KR</option>
+          <option value="Noto Serif KR">Noto Serif KR</option>
+          <option value="Nanum Gothic">Nanum Gothic</option>
+          <option value="Nanum Myeongjo">Nanum Myeongjo</option>
+          <option value="Gowun Dodum">Gowun Dodum</option>
+          <option value="IBM Plex Mono">IBM Plex Mono</option>
+          <option value="system-ui">기기 기본 글꼴</option>
+          <option value="serif">Serif</option>
+          <option value="sans-serif">Sans-serif</option>
+          <option value="monospace">Monospace</option>
+        </select>
       </div>
-      <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:-8px">권장 목록은 재배포 부담이 적은 오픈 라이선스 글꼴과 시스템/브라우저 기본 글꼴입니다. 직접 입력한 글꼴은 기기에 설치되어 있거나 별도로 허용된 라이선스인지 확인하세요.</p>
+      <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:-8px">글꼴은 목록에서만 고르도록 바꿨습니다.</p>
       <div class="setting-row">
         <label>글꼴 크기</label>
-        <input type="number" id="s-size" list="size-options" min="8" max="120" step="1" value="14" style="width:82px" aria-label="글꼴 크기(px)">
+        <select id="s-size" style="width:82px" aria-label="글꼴 크기(px)">
+          <option value="10">10px</option>
+          <option value="12">12px</option>
+          <option value="14">14px</option>
+          <option value="16">16px</option>
+          <option value="18">18px</option>
+          <option value="20">20px</option>
+          <option value="24">24px</option>
+          <option value="28">28px</option>
+          <option value="32">32px</option>
+          <option value="40">40px</option>
+          <option value="48">48px</option>
+          <option value="64">64px</option>
+        </select>
       </div>
       <div class="setting-row">
         <label>자동 저장 주기 (초)</label>
@@ -871,6 +944,7 @@ let autosaveTimer = null, autosaveInterval = 10;
 let saveTimeout = null, isDirty = false;
 let settings = { theme: 'light', font: 'Noto Sans KR', size: '14px', autosave: 10 };
 let pendingDeleteId = null, pendingPermDeleteId = null;
+let drawingMode = false, eraserMode = false, isDrawing = false, hasDrawing = false;
 
 // ── Load / Save ──
 function loadData() {
@@ -900,19 +974,23 @@ function stripHtml(html) { const t = document.createElement('div'); t.innerHTML 
 function countWords(text) { const c = text.trim(); if (!c) return 0; return c.split(/\s+/).filter(w => w.length > 0).length; }
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return escHtml(s).replace(/'/g,'&#39;'); }
+const FONT_CHOICES = ['Noto Sans KR', 'Noto Serif KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gowun Dodum', 'IBM Plex Mono', 'system-ui', 'serif', 'sans-serif', 'monospace'];
+const SIZE_CHOICES = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '40px', '48px', '64px'];
 function normalizeFontFamily(value) {
-  const font = (value || '').trim();
-  return font || 'Noto Sans KR';
+  return FONT_CHOICES.includes(value) ? value : 'Noto Sans KR';
 }
 function normalizePx(value, fallback = '14px') {
   const raw = String(value || '').trim();
-  const num = parseFloat(raw.replace('px', ''));
-  if (!Number.isFinite(num)) return fallback;
-  return Math.max(8, Math.min(120, num)) + 'px';
+  const px = raw.endsWith('px') ? raw : raw + 'px';
+  return SIZE_CHOICES.includes(px) ? px : fallback;
 }
 function pxNumber(value, fallback = 14) {
   const num = parseFloat(String(value || '').replace('px', ''));
   return Number.isFinite(num) ? num : fallback;
+}
+function selectValueOrDefault(select, value, fallback) {
+  const normalized = String(value || fallback);
+  select.value = [...select.options].some(opt => opt.value === normalized) ? normalized : fallback;
 }
 function cssFontFamily(value) {
   return normalizeFontFamily(value).split(',').map(part => {
@@ -964,6 +1042,8 @@ function toast(msg) {
 
 // ── Apply settings ──
 function applySettings() {
+  settings.font = normalizeFontFamily(settings.font);
+  settings.size = normalizePx(settings.size, '14px');
   const app = document.getElementById('app');
   app.setAttribute('data-theme', settings.theme);
 
@@ -980,9 +1060,9 @@ function applySettings() {
   }
 
   const sfont = document.getElementById('s-font');
-  if (sfont) sfont.value = settings.font;
+  if (sfont) selectValueOrDefault(sfont, settings.font, 'Noto Sans KR');
   const ssize = document.getElementById('s-size');
-  if (ssize) ssize.value = pxNumber(settings.size);
+  if (ssize) selectValueOrDefault(ssize, String(pxNumber(settings.size)), '14');
   const sauto = document.getElementById('s-autosave');
   if (sauto) sauto.value = settings.autosave;
 
@@ -992,9 +1072,9 @@ function applySettings() {
   if (ed) { ed.style.fontFamily = cssFontFamily(settings.font); ed.style.fontSize = settings.size; }
 
   const selFont = document.getElementById('sel-font');
-  if (selFont) selFont.value = normalizeFontFamily(settings.font);
+  if (selFont) selectValueOrDefault(selFont, settings.font, 'Noto Sans KR');
   const selSize = document.getElementById('sel-size');
-  if (selSize) selSize.value = pxNumber(settings.size);
+  if (selSize) selectValueOrDefault(selSize, String(pxNumber(settings.size)), '14');
 
   document.getElementById('autosave-info').textContent = `자동저장 ${autosaveInterval}초`;
   startAutosave();
@@ -1009,8 +1089,8 @@ document.getElementById('btn-theme').onclick = () => {
 
 // ── Settings modal ──
 document.getElementById('btn-settings').onclick = () => {
-  document.getElementById('s-font').value = settings.font;
-  document.getElementById('s-size').value = pxNumber(settings.size);
+  selectValueOrDefault(document.getElementById('s-font'), settings.font, 'Noto Sans KR');
+  selectValueOrDefault(document.getElementById('s-size'), String(pxNumber(settings.size)), '14');
   document.getElementById('s-autosave').value = settings.autosave;
   document.getElementById('modal-settings').style.display = 'flex';
 };
@@ -1026,7 +1106,7 @@ document.getElementById('settings-save').onclick = () => {
 
 // ── Create note ──
 function createNote() {
-  const note = { id: uid(), title: '', content: '', bgClass: '', bgColor: '', pinned: false, favorite: false, createdAt: Date.now(), modifiedAt: Date.now() };
+  const note = { id: uid(), title: '', content: '', drawing: '', bgClass: '', bgColor: '', pinned: false, favorite: false, createdAt: Date.now(), modifiedAt: Date.now() };
   notes.unshift(note); saveData(); renderNoteList(); openNote(note.id);
   document.getElementById('note-title-input').focus();
 }
@@ -1043,6 +1123,7 @@ function openNote(id) {
   document.getElementById('note-title-input').value = note.title || '';
   const ed = document.getElementById('note-editor');
   ed.innerHTML = note.content || '';
+  requestAnimationFrame(() => loadDrawing(note.drawing || ''));
   applyNoteBackground(note);
   updateMeta(note);
   ed.style.fontFamily = cssFontFamily(settings.font);
@@ -1076,6 +1157,7 @@ function saveCurrentNote(silent = false) {
   if (!note) return;
   note.title      = document.getElementById('note-title-input').value;
   note.content    = document.getElementById('note-editor').innerHTML;
+  note.drawing    = getDrawingData();
   note.modifiedAt = Date.now();
   saveData(); updateMeta(note); renderNoteList(); setSaveDot(true); isDirty = false;
   if (!silent) toast('저장됨');
@@ -1363,6 +1445,119 @@ document.getElementById('color-text').addEventListener('change', e => execCmd('f
 document.getElementById('color-hl').addEventListener('input',    e => execCmd('hiliteColor', e.target.value));
 document.getElementById('color-hl').addEventListener('change',   e => execCmd('hiliteColor', e.target.value));
 
+// ── Drawing board ──
+function getDrawingCanvas() { return document.getElementById('drawing-canvas'); }
+function getDrawingCtx() { return getDrawingCanvas().getContext('2d'); }
+function setDrawingUi() {
+  document.getElementById('drawing-board').classList.toggle('drawing-enabled', drawingMode);
+  document.getElementById('drawing-board').classList.toggle('has-drawing', hasDrawing);
+  document.getElementById('draw-toggle').classList.toggle('active', drawingMode);
+  document.getElementById('draw-eraser').classList.toggle('active', eraserMode);
+}
+function resizeDrawingCanvas() {
+  const canvas = getDrawingCanvas();
+  const board = document.getElementById('drawing-board');
+  if (!canvas || !board) return;
+  const ratio = window.devicePixelRatio || 1;
+  const width = Math.max(1, board.clientWidth);
+  const height = Math.max(320, board.clientHeight);
+  canvas.width = Math.round(width * ratio);
+  canvas.height = Math.round(height * ratio);
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  const ctx = getDrawingCtx();
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+}
+function drawImageOnBoard(dataUrl) {
+  if (!dataUrl) return;
+  const canvas = getDrawingCanvas();
+  const ctx = getDrawingCtx();
+  const img = new Image();
+  img.onload = () => {
+    const ratio = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width / ratio, canvas.height / ratio);
+  };
+  img.src = dataUrl;
+}
+function loadDrawing(dataUrl) {
+  const canvas = getDrawingCanvas();
+  if (!canvas) return;
+  resizeDrawingCanvas();
+  getDrawingCtx().clearRect(0, 0, canvas.width, canvas.height);
+  hasDrawing = !!dataUrl;
+  setDrawingUi();
+  drawImageOnBoard(dataUrl);
+}
+function getDrawingData() {
+  return hasDrawing ? getDrawingCanvas().toDataURL('image/png') : '';
+}
+function markDrawingChanged() {
+  hasDrawing = true;
+  setDrawingUi();
+  isDirty = true; setSaveDot(false); scheduleAutosave();
+}
+function drawingPoint(e) {
+  const rect = getDrawingCanvas().getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+function beginDrawing(e) {
+  if (!drawingMode || !currentNoteId) return;
+  e.preventDefault();
+  isDrawing = true;
+  getDrawingCanvas().setPointerCapture(e.pointerId);
+  const ctx = getDrawingCtx();
+  const pt = drawingPoint(e);
+  ctx.globalCompositeOperation = eraserMode ? 'destination-out' : 'source-over';
+  ctx.strokeStyle = document.getElementById('draw-color').value;
+  ctx.lineWidth = parseInt(document.getElementById('draw-size').value, 10) || 4;
+  ctx.beginPath();
+  ctx.moveTo(pt.x, pt.y);
+}
+function moveDrawing(e) {
+  if (!isDrawing) return;
+  e.preventDefault();
+  const ctx = getDrawingCtx();
+  const pt = drawingPoint(e);
+  ctx.lineTo(pt.x, pt.y);
+  ctx.stroke();
+  markDrawingChanged();
+}
+function endDrawing(e) {
+  if (!isDrawing) return;
+  e.preventDefault();
+  isDrawing = false;
+  getDrawingCtx().closePath();
+}
+document.getElementById('draw-toggle').onclick = () => {
+  drawingMode = !drawingMode;
+  setDrawingUi();
+  toast(drawingMode ? '그리기 켜짐' : '그리기 꺼짐');
+};
+document.getElementById('draw-eraser').onclick = () => {
+  eraserMode = !eraserMode;
+  if (!drawingMode) drawingMode = true;
+  setDrawingUi();
+};
+document.getElementById('draw-clear').onclick = () => {
+  const canvas = getDrawingCanvas();
+  getDrawingCtx().clearRect(0, 0, canvas.width, canvas.height);
+  hasDrawing = false;
+  setDrawingUi();
+  isDirty = true; setSaveDot(false); scheduleAutosave();
+  toast('그림 지움');
+};
+getDrawingCanvas().addEventListener('pointerdown', beginDrawing);
+getDrawingCanvas().addEventListener('pointermove', moveDrawing);
+getDrawingCanvas().addEventListener('pointerup', endDrawing);
+getDrawingCanvas().addEventListener('pointercancel', endDrawing);
+window.addEventListener('resize', () => {
+  const data = getDrawingData();
+  loadDrawing(data);
+});
+
 // ── Link ──
 let savedSel = null;
 document.getElementById('cmd-link').onclick = () => {
@@ -1414,7 +1609,13 @@ document.getElementById('export-cancel').onclick = () => { document.getElementBy
 
 function getExportNote() {
   if (!currentNoteId) { toast('내보낼 메모를 선택하세요'); return null; }
-  return notes.find(n => n.id === currentNoteId) || null;
+  const note = notes.find(n => n.id === currentNoteId) || null;
+  if (note) {
+    note.title = document.getElementById('note-title-input').value;
+    note.content = document.getElementById('note-editor').innerHTML;
+    note.drawing = getDrawingData();
+  }
+  return note;
 }
 
 document.getElementById('ex-txt').onclick = () => {
@@ -1431,11 +1632,11 @@ document.getElementById('ex-html').onclick = () => {
   const fontFamily = cssFontFamily(settings.font);
   const html = `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="UTF-8"><title>${escHtml(note.title||'메모')}</title>
-<style>body{font-family:${fontFamily},sans-serif;max-width:720px;margin:40px auto;padding:32px 40px;line-height:1.8;color:#171717;background:${bgColor}}h1{font-size:24px;margin-bottom:8px}hr{border:none;border-top:1px solid #e5e5e3;margin:14px 0}.meta{color:#737373;font-size:12px}</style>
+<style>body{font-family:${fontFamily},sans-serif;max-width:720px;margin:40px auto;padding:32px 40px;line-height:1.8;color:#171717;background:${bgColor}}h1{font-size:24px;margin-bottom:8px}hr{border:none;border-top:1px solid #e5e5e3;margin:14px 0}.meta{color:#737373;font-size:12px}.drawing{display:block;width:100%;margin-top:18px;border:1px solid #e5e5e3;border-radius:8px}</style>
 </head><body>
 <h1>${escHtml(note.title||'제목 없음')}</h1>
 <p class="meta">작성 ${fmtDate(note.createdAt)} &nbsp;|&nbsp; 수정 ${fmtDate(note.modifiedAt)}</p>
-<hr>${note.content||''}
+<hr>${note.content||''}${note.drawing ? `<img class="drawing" src="${note.drawing}" alt="메모 그림">` : ''}
 </body></html>`;
   downloadFile((note.title||'메모') + '.html', 'text/html;charset=utf-8', html);
   document.getElementById('modal-export').style.display = 'none';
@@ -1491,6 +1692,14 @@ function buildPngExportNode(note, includeTitle, width, pad) {
   const content = document.createElement('div');
   content.innerHTML = note.content || '';
   root.appendChild(content);
+
+  if (note.drawing) {
+    const drawing = document.createElement('img');
+    drawing.src = note.drawing;
+    drawing.alt = '메모 그림';
+    drawing.style.cssText = 'display:block;width:100%;margin-top:18px;border:1px solid #e5e5e3;border-radius:8px;';
+    root.appendChild(drawing);
+  }
   return root;
 }
 
