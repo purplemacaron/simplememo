@@ -656,6 +656,7 @@
           <input type="color" class="tb-input-color" id="color-hl" value="#fef08a" title="텍스트 배경">
           <span>텍스트 배경</span>
         </label>
+        <button class="tb-btn tb-text-btn" id="cmd-clear-hl" title="선택한 텍스트 배경색 제거">배경 없음</button>
       </div>
       <div class="toolbar-sep"></div>
 
@@ -945,6 +946,9 @@ let saveTimeout = null, isDirty = false;
 let settings = { theme: 'light', font: 'Noto Sans KR', size: '14px', autosave: 10 };
 let pendingDeleteId = null, pendingPermDeleteId = null;
 let drawingMode = false, eraserMode = false, isDrawing = false, hasDrawing = false;
+let historyApplying = false, historyTimer = null;
+let undoStack = [], redoStack = [];
+const HISTORY_LIMIT = 100;
 
 // ── Load / Save ──
 function loadData() {
@@ -1123,7 +1127,7 @@ function openNote(id) {
   document.getElementById('note-title-input').value = note.title || '';
   const ed = document.getElementById('note-editor');
   ed.innerHTML = note.content || '';
-  requestAnimationFrame(() => loadDrawing(note.drawing || ''));
+  requestAnimationFrame(() => { loadDrawing(note.drawing || ''); resetEditorHistory(); });
   applyNoteBackground(note);
   updateMeta(note);
   ed.style.fontFamily = cssFontFamily(settings.font);
@@ -1171,12 +1175,12 @@ function setSaveDot(saved) {
 }
 
 document.getElementById('note-title-input').addEventListener('input', () => {
-  isDirty = true; setSaveDot(false); scheduleAutosave();
+  markEditorChanged();
   const ta = document.getElementById('note-title-input');
   ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px';
 });
 document.getElementById('note-editor').addEventListener('input', () => {
-  isDirty = true; setSaveDot(false); updateCurrentMeta(); scheduleAutosave();
+  markEditorChanged();
   requestAnimationFrame(() => resizeDrawingCanvas(true));
 });
 
@@ -1407,15 +1411,84 @@ function removeCtxMenu() { if (currentCtxMenu) { currentCtxMenu.remove(); curren
 document.addEventListener('click', removeCtxMenu);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') removeCtxMenu(); });
 
-// ── Toolbar ──
+// ── Editor history / Toolbar ──
+function getEditorSnapshot() {
+  return {
+    noteId: currentNoteId,
+    title: document.getElementById('note-title-input').value,
+    content: document.getElementById('note-editor').innerHTML,
+    drawing: getDrawingData()
+  };
+}
+function snapshotsEqual(a, b) {
+  return !!a && !!b && a.noteId === b.noteId && a.title === b.title && a.content === b.content && a.drawing === b.drawing;
+}
+function pushEditorSnapshot(clearRedo = true) {
+  if (historyApplying || !currentNoteId) return;
+  const snapshot = getEditorSnapshot();
+  const latest = undoStack[undoStack.length - 1];
+  if (snapshotsEqual(snapshot, latest)) return;
+  undoStack.push(snapshot);
+  if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  if (clearRedo) redoStack = [];
+}
+function scheduleHistorySnapshot() {
+  if (historyApplying || !currentNoteId) return;
+  clearTimeout(historyTimer);
+  historyTimer = setTimeout(() => pushEditorSnapshot(true), 350);
+}
+function resetEditorHistory() {
+  clearTimeout(historyTimer);
+  undoStack = [];
+  redoStack = [];
+  if (currentNoteId) undoStack.push(getEditorSnapshot());
+}
+function applyEditorSnapshot(snapshot) {
+  if (!snapshot || snapshot.noteId !== currentNoteId) return;
+  historyApplying = true;
+  document.getElementById('note-title-input').value = snapshot.title || '';
+  document.getElementById('note-editor').innerHTML = snapshot.content || '';
+  loadDrawing(snapshot.drawing || '');
+  historyApplying = false;
+  updateCurrentMeta();
+  isDirty = true;
+  setSaveDot(false);
+  scheduleAutosave();
+}
+function performUndo() {
+  clearTimeout(historyTimer);
+  pushEditorSnapshot(false);
+  if (undoStack.length < 2) { toast('실행 취소할 내용이 없습니다'); return; }
+  const current = undoStack.pop();
+  redoStack.push(current);
+  applyEditorSnapshot(undoStack[undoStack.length - 1]);
+}
+function performRedo() {
+  clearTimeout(historyTimer);
+  if (redoStack.length === 0) { toast('다시 실행할 내용이 없습니다'); return; }
+  const snapshot = redoStack.pop();
+  undoStack.push(snapshot);
+  if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  applyEditorSnapshot(snapshot);
+}
+function markEditorChanged(recordHistory = true) {
+  if (historyApplying) return;
+  updateCurrentMeta();
+  isDirty = true;
+  setSaveDot(false);
+  scheduleAutosave();
+  if (recordHistory) scheduleHistorySnapshot();
+}
 function execCmd(cmd, val = null) {
+  if (cmd === 'undo') { performUndo(); return; }
+  if (cmd === 'redo') { performRedo(); return; }
   document.getElementById('note-editor').focus();
   document.execCommand(cmd, false, val);
-  updateCurrentMeta();
-  isDirty = true; setSaveDot(false); scheduleAutosave();
+  markEditorChanged(false);
+  pushEditorSnapshot(true);
 }
-document.getElementById('cmd-undo').onclick      = () => execCmd('undo');
-document.getElementById('cmd-redo').onclick      = () => execCmd('redo');
+document.getElementById('cmd-undo').onclick      = () => performUndo();
+document.getElementById('cmd-redo').onclick      = () => performRedo();
 document.getElementById('cmd-bold').onclick      = () => execCmd('bold');
 document.getElementById('cmd-italic').onclick    = () => execCmd('italic');
 document.getElementById('cmd-underline').onclick = () => execCmd('underline');
@@ -1429,22 +1502,70 @@ document.getElementById('cmd-ol').onclick        = () => execCmd('insertOrderedL
 document.getElementById('sel-font').addEventListener('change', e => { execCmd('fontName', normalizeFontFamily(e.target.value)); });
 function applySelectedFontSize(input) {
   const size = normalizePx(input.value, settings.size);
+  const ed = document.getElementById('note-editor');
   input.value = pxNumber(size);
-  execCmd('fontSize', '7');
-  document.getElementById('note-editor').querySelectorAll('font[size="7"]').forEach(el => {
+  ed.focus();
+  document.execCommand('fontSize', false, '7');
+  ed.querySelectorAll('font[size="7"]').forEach(el => {
     el.removeAttribute('size'); el.style.fontSize = size;
   });
-  isDirty = true; setSaveDot(false); scheduleAutosave();
+  markEditorChanged(false);
+  pushEditorSnapshot(true);
 }
 const selSizeInput = document.getElementById('sel-size');
 selSizeInput.addEventListener('change', e => applySelectedFontSize(e.target));
 selSizeInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') { e.preventDefault(); applySelectedFontSize(e.target); }
 });
+function unwrapIfEmptyInlineStyle(el) {
+  if (!el || el.nodeType !== 1) return;
+  const removable = ['SPAN', 'FONT'].includes(el.tagName) &&
+    (!el.getAttribute('style') || el.getAttribute('style').trim() === '') &&
+    [...el.attributes].every(attr => attr.name === 'style');
+  if (!removable) return;
+  while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
+  el.remove();
+}
+function clearTextBackground() {
+  const ed = document.getElementById('note-editor');
+  ed.focus();
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !ed.contains(sel.anchorNode)) {
+    document.execCommand('hiliteColor', false, 'transparent');
+    markEditorChanged(false);
+    pushEditorSnapshot(true);
+    toast('이후 입력되는 텍스트 배경을 제거했습니다');
+    return;
+  }
+
+  const range = sel.getRangeAt(0);
+  const fragment = range.extractContents();
+  const wrapper = document.createElement('span');
+  wrapper.appendChild(fragment);
+  wrapper.querySelectorAll('*').forEach(el => {
+    el.style.backgroundColor = '';
+    el.style.background = '';
+    el.removeAttribute('bgcolor');
+    if (el.tagName === 'MARK') {
+      const span = document.createElement('span');
+      span.innerHTML = el.innerHTML;
+      el.replaceWith(span);
+    }
+  });
+  const cleaned = document.createDocumentFragment();
+  while (wrapper.firstChild) cleaned.appendChild(wrapper.firstChild);
+  range.insertNode(cleaned);
+  ed.querySelectorAll('span, font').forEach(unwrapIfEmptyInlineStyle);
+  sel.removeAllRanges();
+  markEditorChanged(false);
+  pushEditorSnapshot(true);
+  toast('텍스트 배경색 제거됨');
+}
 document.getElementById('color-text').addEventListener('input',  e => execCmd('foreColor', e.target.value));
 document.getElementById('color-text').addEventListener('change', e => execCmd('foreColor', e.target.value));
 document.getElementById('color-hl').addEventListener('input',    e => execCmd('hiliteColor', e.target.value));
 document.getElementById('color-hl').addEventListener('change',   e => execCmd('hiliteColor', e.target.value));
+document.getElementById('cmd-clear-hl').onclick = clearTextBackground;
 
 // ── Drawing board ──
 function getDrawingCanvas() { return document.getElementById('drawing-canvas'); }
@@ -1539,6 +1660,7 @@ function endDrawing(e) {
   e.preventDefault();
   isDrawing = false;
   getDrawingCtx().closePath();
+  pushEditorSnapshot(true);
 }
 document.getElementById('draw-toggle').onclick = () => {
   drawingMode = !drawingMode;
@@ -1556,6 +1678,7 @@ document.getElementById('draw-clear').onclick = () => {
   hasDrawing = false;
   setDrawingUi();
   isDirty = true; setSaveDot(false); scheduleAutosave();
+  pushEditorSnapshot(true);
   toast('그림 지움');
 };
 getDrawingCanvas().addEventListener('pointerdown', beginDrawing);
@@ -1587,7 +1710,8 @@ document.getElementById('link-confirm').onclick = () => {
   if (savedSel) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(savedSel); }
   document.execCommand('insertHTML', false, `<a href="${escHtml(url)}" target="_blank">${escHtml(txt || url)}</a>`);
   document.getElementById('modal-link').style.display = 'none';
-  isDirty = true; setSaveDot(false); scheduleAutosave();
+  markEditorChanged(false);
+  pushEditorSnapshot(true);
 };
 
 // ── BG color ──
@@ -1718,12 +1842,103 @@ function serializeNodeForSvg(node) {
   return new XMLSerializer().serializeToString(clone);
 }
 
-document.getElementById('ex-png').onclick = () => {
-  const note = getExportNote(); if (!note) return;
-  const includeTitle = document.getElementById('png-include-title').checked;
-  const scale = 2, W = 720, pad = 48;
-
-  const exportNode = buildPngExportNode(note, includeTitle, W, pad);
+function safeFileName(name, extension) {
+  const base = (name || '메모').replace(/[\\/:*?"<>|]+/g, '_').trim() || '메모';
+  return `${base}.${extension}`;
+}
+function downloadBlob(name, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function canvasToPngBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('PNG blob 생성 실패')), 'image/png');
+  });
+}
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+  const lines = String(text || '').split(/\n/);
+  for (const rawLine of lines) {
+    const words = rawLine.split(/\s+/);
+    let line = '';
+    if (!rawLine.trim()) { y += lineHeight; continue; }
+    for (const word of words) {
+      const testLine = line ? `${line} ${word}` : word;
+      if (ctx.measureText(testLine).width > maxWidth && line) {
+        ctx.fillText(line, x, y);
+        line = word;
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) ctx.fillText(line, x, y);
+    y += lineHeight;
+  }
+  return y;
+}
+async function renderPngFallback(note, includeTitle, width, pad, scale) {
+  const bgColor = getNoteBgColor(note) || '#ffffff';
+  const textColor = readableTextColor(bgColor);
+  const fontSize = pxNumber(settings.size, 14);
+  const lineHeight = Math.round(fontSize * 1.8);
+  const contentText = stripHtml(note.content || '') || '';
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = `${fontSize}px ${cssFontFamily(settings.font)}, sans-serif`;
+  let estimatedLines = 2 + contentText.split(/\n/).length;
+  contentText.split(/\s+/).forEach(word => {
+    estimatedLines += Math.max(0, Math.floor(measure.measureText(word).width / Math.max(1, width - pad * 2)));
+  });
+  let drawingImg = null;
+  if (note.drawing) {
+    try { drawingImg = await loadImage(note.drawing); } catch(e) { drawingImg = null; }
+  }
+  const drawingHeight = drawingImg ? Math.round((width - pad * 2) * (drawingImg.height / drawingImg.width)) + 24 : 0;
+  const height = Math.max(160, pad * 2 + (includeTitle ? 58 : 0) + estimatedLines * lineHeight + drawingHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = textColor;
+  ctx.textBaseline = 'top';
+  let y = pad;
+  if (includeTitle) {
+    ctx.font = `700 24px ${cssFontFamily(settings.font)}, sans-serif`;
+    ctx.fillText(note.title || '제목 없음', pad, y);
+    y += 42;
+    ctx.strokeStyle = '#e5e5e3';
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(width - pad, y); ctx.stroke();
+    y += 18;
+  }
+  ctx.font = `${fontSize}px ${cssFontFamily(settings.font)}, sans-serif`;
+  y = wrapCanvasText(ctx, contentText, pad, y, width - pad * 2, lineHeight);
+  if (drawingImg) {
+    y += 18;
+    const drawWidth = width - pad * 2;
+    const drawHeight = Math.round(drawWidth * (drawingImg.height / drawingImg.width));
+    ctx.drawImage(drawingImg, pad, y, drawWidth, drawHeight);
+  }
+  return canvasToPngBlob(canvas);
+}
+async function exportPngWithSvg(note, includeTitle, width, pad, scale) {
+  const exportNode = buildPngExportNode(note, includeTitle, width, pad);
   exportNode.style.position = 'fixed';
   exportNode.style.left = '-9999px';
   exportNode.style.top = '0';
@@ -1737,41 +1952,42 @@ document.getElementById('ex-png').onclick = () => {
 
   const serialized = serializeNodeForSvg(exportNode);
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${H}">
   <foreignObject width="100%" height="100%">${serialized}</foreignObject>
 </svg>`;
   const svgUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
-  const img = new Image();
-
-  img.onload = () => {
+  try {
+    const img = await loadImage(svgUrl);
     const canvas = document.createElement('canvas');
-    canvas.width  = W * scale;
+    canvas.width = width * scale;
     canvas.height = H * scale;
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
-    ctx.drawImage(img, 0, 0, W, H);
+    ctx.drawImage(img, 0, 0, width, H);
+    return await canvasToPngBlob(canvas);
+  } finally {
     URL.revokeObjectURL(svgUrl);
-
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = (note.title || '메모') + '.png';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-  };
-
-  img.onerror = () => {
-    URL.revokeObjectURL(svgUrl);
-    toast('PNG 저장에 실패했습니다');
-  };
-
-  img.src = svgUrl;
+  }
+}
+document.getElementById('ex-png').onclick = async () => {
+  const note = getExportNote(); if (!note) return;
+  const includeTitle = document.getElementById('png-include-title').checked;
+  const scale = 2, W = 720, pad = 48;
   document.getElementById('modal-export').style.display = 'none';
-  toast('PNG 저장됨');
-};
 
+  try {
+    let blob;
+    try {
+      blob = await exportPngWithSvg(note, includeTitle, W, pad, scale);
+    } catch(e) {
+      blob = await renderPngFallback(note, includeTitle, W, pad, scale);
+    }
+    downloadBlob(safeFileName(note.title || '메모', 'png'), blob);
+    toast('PNG 저장됨');
+  } catch(e) {
+    toast('PNG 저장에 실패했습니다');
+  }
+};
 document.getElementById('ex-json').onclick = () => {
   const data = { notes, trashNotes, exportedAt: new Date().toISOString(), version: 1 };
   downloadFile('simplememo_backup_' + new Date().toISOString().slice(0,10) + '.json', 'application/json', JSON.stringify(data, null, 2));
