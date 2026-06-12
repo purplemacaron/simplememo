@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f5f5f4;
-    --sidebar-bg: #fafaf9;
+    --bg: #ffffff;
+    --sidebar-bg: #ffffff;
     --panel-bg: #ffffff;
     --border: #e5e5e3;
     --border-light: #efefed;
@@ -192,7 +192,9 @@
     position: relative;
   }
   .tb-btn:hover { background: var(--border-light); color: var(--text-primary); }
-  .tb-btn.active { background: var(--accent-light); color: var(--accent); }
+  .tb-btn.active { background: var(--accent-light); color: var(--accent); box-shadow: inset 0 0 0 1px rgba(37, 99, 235, .24); }
+  .tb-btn.effect-flash { animation: effectFlash .24s ease; }
+  @keyframes effectFlash { 0% { transform: scale(.94); } 55% { transform: scale(1.08); } 100% { transform: scale(1); } }
   .tb-text-btn {
     width: auto; min-width: 54px; padding: 0 9px; gap: 4px;
     font-family: var(--font-base); font-size: 12px; font-weight: 500;
@@ -239,6 +241,12 @@
     width: 16px; height: 16px; border-radius: 4px;
     border: 1px solid var(--border); box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
   }
+  .bg-toggle-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 12px; margin-bottom: 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--bg); color: var(--text-secondary); font-size: 12px;
+  }
   .bg-swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
   .bg-swatch {
     min-height: 48px; border: 2px solid var(--border); border-radius: var(--radius-md);
@@ -265,7 +273,7 @@
     width: 100%; border: none; outline: none;
     background: transparent; font-family: var(--font-base);
     font-size: 22px; font-weight: 700; color: var(--text-primary);
-    padding: 0; resize: none; line-height: 1.3;
+    padding: 2px 0 4px; resize: none; line-height: 1.4; min-height: 36px; overflow: hidden;
   }
   #note-title-input::placeholder { color: var(--text-muted); }
 
@@ -279,6 +287,7 @@
   #note-editor {
     position: relative; z-index: 1;
     flex: 1; min-height: 400px;
+    padding: 14px 16px; border-radius: var(--radius-md);
     outline: none; font-family: var(--font-base);
     font-size: 14px; line-height: 1.8;
     color: var(--text-primary); word-break: break-word;
@@ -299,7 +308,7 @@
   .drawing-hint {
     position: absolute; top: 0; right: 0; z-index: 3;
     color: var(--text-muted); font-size: 11px; pointer-events: none;
-    background: var(--bg-primary); border: 1px solid var(--border-light);
+    background: var(--panel-bg); border: 1px solid var(--border-light);
     border-radius: var(--radius-sm); padding: 3px 7px;
     display: none;
   }
@@ -656,7 +665,13 @@
           <input type="color" class="tb-input-color" id="color-hl" value="#fef08a" title="텍스트 배경">
           <span>텍스트 배경</span>
         </label>
-        <button class="tb-btn tb-text-btn" id="cmd-clear-hl" title="선택한 텍스트 배경색 제거">배경 없음</button>
+        <div class="tb-labeled-control" title="텍스트 배경색 켜기/끄기" style="margin-left:4px">
+          <span>배경색</span>
+          <label class="toggle" aria-label="텍스트 배경색 켜기/끄기">
+            <input type="checkbox" id="toggle-hl" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
       <div class="toolbar-sep"></div>
 
@@ -841,8 +856,15 @@
 <div class="modal-overlay" id="modal-bgcolor" style="display:none">
   <div class="modal" style="min-width:300px">
     <h3>메모 배경색</h3>
+    <div class="bg-toggle-row">
+      <span>메모 배경색 사용</span>
+      <label class="toggle" aria-label="메모 배경색 사용">
+        <input type="checkbox" id="note-bg-enabled" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
     <div class="bg-swatch-grid">
-      <div class="bg-swatch" data-color="" style="background:var(--panel-bg)" title="배경색 없음">없음</div>
+      <div class="bg-swatch" data-color="#ffffff" style="background:#ffffff" title="흰색"></div>
       <div class="bg-swatch" data-color="#fefce8" style="background:#fefce8" title="노랑"></div>
       <div class="bg-swatch" data-color="#eff6ff" style="background:#eff6ff" title="파랑"></div>
       <div class="bg-swatch" data-color="#f0fdf4" style="background:#f0fdf4" title="초록"></div>
@@ -974,7 +996,21 @@ function fmtDate(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-function stripHtml(html) { const t = document.createElement('div'); t.innerHTML = html; return t.textContent || ''; }
+function htmlToPlainText(html) {
+  const root = document.createElement('div');
+  root.innerHTML = html || '';
+  root.querySelectorAll('script, style').forEach(el => el.remove());
+  root.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+  root.querySelectorAll('li').forEach(li => {
+    if (!li.textContent.startsWith('• ')) li.insertBefore(document.createTextNode('• '), li.firstChild);
+    li.appendChild(document.createTextNode('\n'));
+  });
+  root.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, blockquote, pre, tr').forEach(el => {
+    if (el.nextSibling) el.appendChild(document.createTextNode('\n'));
+  });
+  return (root.textContent || '').replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+function stripHtml(html) { return htmlToPlainText(html); }
 function countWords(text) { const c = text.trim(); if (!c) return 0; return c.split(/\s+/).filter(w => w.length > 0).length; }
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return escHtml(s).replace(/'/g,'&#39;'); }
@@ -1014,7 +1050,9 @@ const LEGACY_BG_COLORS = {
   'note-bg-dark': '#1e1e1e'
 };
 function getNoteBgColor(note) {
-  return note?.bgColor || LEGACY_BG_COLORS[note?.bgClass] || '';
+  if (!note) return '#ffffff';
+  if (note.bgEnabled === false) return '';
+  return note.bgColor || LEGACY_BG_COLORS[note.bgClass] || '#ffffff';
 }
 
 function hexToRgb(hex) {
@@ -1031,10 +1069,12 @@ function applyNoteBackground(note) {
   const ed = document.getElementById('note-editor');
   const color = getNoteBgColor(note);
   ed.className = '';
-  ed.style.backgroundColor = color || '';
+  ed.style.backgroundColor = color || 'transparent';
   ed.style.color = color ? readableTextColor(color) : '';
   const indicator = document.getElementById('note-bg-indicator');
-  if (indicator) indicator.style.background = color || '#ffffff';
+  if (indicator) {
+    indicator.style.background = color || 'linear-gradient(135deg, transparent 46%, var(--danger) 48%, var(--danger) 52%, transparent 54%)';
+  }
 }
 
 function toast(msg) {
@@ -1110,7 +1150,7 @@ document.getElementById('settings-save').onclick = () => {
 
 // ── Create note ──
 function createNote() {
-  const note = { id: uid(), title: '', content: '', drawing: '', bgClass: '', bgColor: '', pinned: false, favorite: false, createdAt: Date.now(), modifiedAt: Date.now() };
+  const note = { id: uid(), title: '', content: '', drawing: '', bgClass: '', bgColor: '#ffffff', bgEnabled: true, pinned: false, favorite: false, createdAt: Date.now(), modifiedAt: Date.now() };
   notes.unshift(note); saveData(); renderNoteList(); openNote(note.id);
   document.getElementById('note-title-input').focus();
 }
@@ -1484,6 +1524,8 @@ function execCmd(cmd, val = null) {
   if (cmd === 'redo') { performRedo(); return; }
   document.getElementById('note-editor').focus();
   document.execCommand(cmd, false, val);
+  flashEffectButton(cmd);
+  updateToolbarStates();
   markEditorChanged(false);
   pushEditorSnapshot(true);
 }
@@ -1498,6 +1540,42 @@ document.getElementById('cmd-alignc').onclick    = () => execCmd('justifyCenter'
 document.getElementById('cmd-alignr').onclick    = () => execCmd('justifyRight');
 document.getElementById('cmd-ul').onclick        = () => execCmd('insertUnorderedList');
 document.getElementById('cmd-ol').onclick        = () => execCmd('insertOrderedList');
+
+const commandButtonMap = {
+  bold: 'cmd-bold',
+  italic: 'cmd-italic',
+  underline: 'cmd-underline',
+  strikeThrough: 'cmd-strike',
+  justifyLeft: 'cmd-alignl',
+  justifyCenter: 'cmd-alignc',
+  justifyRight: 'cmd-alignr',
+  insertUnorderedList: 'cmd-ul',
+  insertOrderedList: 'cmd-ol'
+};
+function flashEffectButton(cmd) {
+  const btn = document.getElementById(commandButtonMap[cmd]);
+  if (!btn) return;
+  btn.classList.remove('effect-flash');
+  void btn.offsetWidth;
+  btn.classList.add('effect-flash');
+  setTimeout(() => btn.classList.remove('effect-flash'), 260);
+}
+function updateToolbarStates() {
+  Object.entries(commandButtonMap).forEach(([cmd, id]) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    let active = false;
+    try { active = document.queryCommandState(cmd); } catch(e) { active = false; }
+    btn.classList.toggle('active', active);
+  });
+  const toggleHl = document.getElementById('toggle-hl');
+  if (toggleHl) toggleHl.closest('.tb-labeled-control')?.classList.toggle('active', toggleHl.checked);
+}
+document.addEventListener('selectionchange', () => {
+  if (document.activeElement === document.getElementById('note-editor')) updateToolbarStates();
+});
+document.getElementById('note-editor').addEventListener('keyup', updateToolbarStates);
+document.getElementById('note-editor').addEventListener('mouseup', updateToolbarStates);
 
 document.getElementById('sel-font').addEventListener('change', e => { execCmd('fontName', normalizeFontFamily(e.target.value)); });
 function applySelectedFontSize(input) {
@@ -1563,9 +1641,21 @@ function clearTextBackground() {
 }
 document.getElementById('color-text').addEventListener('input',  e => execCmd('foreColor', e.target.value));
 document.getElementById('color-text').addEventListener('change', e => execCmd('foreColor', e.target.value));
-document.getElementById('color-hl').addEventListener('input',    e => execCmd('hiliteColor', e.target.value));
-document.getElementById('color-hl').addEventListener('change',   e => execCmd('hiliteColor', e.target.value));
-document.getElementById('cmd-clear-hl').onclick = clearTextBackground;
+document.getElementById('color-hl').addEventListener('input', e => {
+  const toggle = document.getElementById('toggle-hl');
+  toggle.checked = true;
+  execCmd('hiliteColor', e.target.value);
+});
+document.getElementById('color-hl').addEventListener('change', e => {
+  const toggle = document.getElementById('toggle-hl');
+  toggle.checked = true;
+  execCmd('hiliteColor', e.target.value);
+});
+document.getElementById('toggle-hl').addEventListener('change', e => {
+  if (e.target.checked) execCmd('hiliteColor', document.getElementById('color-hl').value);
+  else clearTextBackground();
+  updateToolbarStates();
+});
 
 // ── Drawing board ──
 function getDrawingCanvas() { return document.getElementById('drawing-canvas'); }
@@ -1715,26 +1805,34 @@ document.getElementById('link-confirm').onclick = () => {
 };
 
 // ── BG color ──
-function setCurrentNoteBackground(color) {
+function setCurrentNoteBackground(color, enabled = true, closeModal = true) {
   if (!currentNoteId) { toast('메모를 먼저 선택하세요'); return; }
   const note = notes.find(n => n.id === currentNoteId); if (!note) return;
   note.bgClass = '';
-  note.bgColor = color || '';
+  note.bgEnabled = enabled;
+  if (color) note.bgColor = color;
+  if (!note.bgColor) note.bgColor = '#ffffff';
   applyNoteBackground(note);
   saveData();
-  document.getElementById('modal-bgcolor').style.display = 'none';
-  toast(note.bgColor ? '메모 배경색 변경됨' : '메모 배경색 초기화됨');
+  if (closeModal) document.getElementById('modal-bgcolor').style.display = 'none';
+  toast(note.bgEnabled ? '메모 배경색 변경됨' : '메모 배경색 꺼짐');
 }
 document.getElementById('cmd-bgcolor').onclick = () => {
   const note = notes.find(n => n.id === currentNoteId);
-  document.getElementById('custom-bg-color').value = getNoteBgColor(note) || '#ffffff';
+  document.getElementById('custom-bg-color').value = note?.bgColor || getNoteBgColor(note) || '#ffffff';
+  document.getElementById('note-bg-enabled').checked = note?.bgEnabled !== false;
   document.getElementById('modal-bgcolor').style.display = 'flex';
 };
 document.getElementById('bgcolor-cancel').onclick = () => { document.getElementById('modal-bgcolor').style.display = 'none'; };
-document.querySelectorAll('.bg-swatch').forEach(sw => {
-  sw.addEventListener('click', () => setCurrentNoteBackground(sw.dataset.color || ''));
+document.getElementById('note-bg-enabled').addEventListener('change', e => {
+  const note = notes.find(n => n.id === currentNoteId);
+  const color = note?.bgColor || document.getElementById('custom-bg-color').value || '#ffffff';
+  setCurrentNoteBackground(color, e.target.checked, false);
 });
-document.getElementById('apply-custom-bg').onclick = () => setCurrentNoteBackground(document.getElementById('custom-bg-color').value);
+document.querySelectorAll('.bg-swatch').forEach(sw => {
+  sw.addEventListener('click', () => setCurrentNoteBackground(sw.dataset.color || '#ffffff', true));
+});
+document.getElementById('apply-custom-bg').onclick = () => setCurrentNoteBackground(document.getElementById('custom-bg-color').value, true);
 
 // ── Export modal ──
 document.getElementById('btn-export').onclick = () => { document.getElementById('modal-export').style.display = 'flex'; };
@@ -1793,23 +1891,25 @@ function buildPngExportNode(note, includeTitle, width, pad) {
   root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
   root.style.cssText = [
     `width:${width}px`,
-    `padding:${pad}px`,
+    `padding:${pad + 8}px ${pad}px ${pad}px`,
     `background:${bgColor}`,
     `color:${textColor}`,
     `font-family:${cssFontFamily(settings.font)}, sans-serif`,
     `font-size:${settings.size}`,
     'line-height:1.8',
     'word-break:break-word',
-    'box-sizing:border-box'
+    'box-sizing:border-box',
+    'overflow:visible',
+    'min-height:120px'
   ].join(';');
 
   const style = document.createElement('style');
   style.textContent = `
     * { box-sizing: border-box; }
-    h1 { margin: 0 0 8px; font-size: 24px; line-height: 1.35; color: inherit; }
+    h1 { display:block; margin: 0 0 12px; padding: 0; font-size: 24px; line-height: 1.45; color: inherit; overflow: visible; white-space: pre-wrap; }
     hr { border: none; border-top: 1px solid #e5e5e3; margin: 14px 0 18px; }
     ul, ol { padding-left: 24px; margin: 0.6em 0; }
-    p, div { margin-top: 0; }
+    p, div { margin-top: 0; white-space: pre-wrap; }
     a { color: #2563eb; text-decoration: underline; }
     img { max-width: 100%; height: auto; }
   `;
@@ -1838,8 +1938,15 @@ function buildPngExportNode(note, includeTitle, width, pad) {
 
 function serializeNodeForSvg(node) {
   const clone = node.cloneNode(true);
-  clone.querySelectorAll('br').forEach(br => br.textContent = '');
+  clone.querySelectorAll('br').forEach(br => { br.textContent = ''; });
   return new XMLSerializer().serializeToString(clone);
+}
+function waitForImages(root) {
+  const images = [...root.querySelectorAll('img')];
+  return Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+    img.onload = resolve;
+    img.onerror = resolve;
+  })));
 }
 
 function safeFileName(name, extension) {
@@ -1870,25 +1977,42 @@ function loadImage(src) {
     img.src = src;
   });
 }
-function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
-  const lines = String(text || '').split(/\n/);
-  for (const rawLine of lines) {
-    const words = rawLine.split(/\s+/);
+function getWrappedCanvasLines(ctx, text, maxWidth) {
+  const output = [];
+  String(text || '').split(/\n/).forEach(rawLine => {
+    if (!rawLine.trim()) { output.push(''); return; }
+    const tokens = rawLine.split(/(\s+)/).filter(Boolean);
     let line = '';
-    if (!rawLine.trim()) { y += lineHeight; continue; }
-    for (const word of words) {
-      const testLine = line ? `${line} ${word}` : word;
-      if (ctx.measureText(testLine).width > maxWidth && line) {
-        ctx.fillText(line, x, y);
-        line = word;
-        y += lineHeight;
+    tokens.forEach(token => {
+      const candidate = line + token;
+      if (ctx.measureText(candidate).width <= maxWidth || !line) {
+        line = candidate;
+        while (ctx.measureText(line).width > maxWidth && line.length > 1) {
+          let chunk = '';
+          for (const ch of line) {
+            if (ctx.measureText(chunk + ch).width > maxWidth && chunk) {
+              output.push(chunk);
+              chunk = ch;
+            } else {
+              chunk += ch;
+            }
+          }
+          line = chunk;
+        }
       } else {
-        line = testLine;
+        output.push(line.trimEnd());
+        line = token.trimStart();
       }
-    }
+    });
+    output.push(line.trimEnd());
+  });
+  return output;
+}
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+  getWrappedCanvasLines(ctx, text, maxWidth).forEach(line => {
     if (line) ctx.fillText(line, x, y);
     y += lineHeight;
-  }
+  });
   return y;
 }
 async function renderPngFallback(note, includeTitle, width, pad, scale) {
@@ -1896,19 +2020,19 @@ async function renderPngFallback(note, includeTitle, width, pad, scale) {
   const textColor = readableTextColor(bgColor);
   const fontSize = pxNumber(settings.size, 14);
   const lineHeight = Math.round(fontSize * 1.8);
-  const contentText = stripHtml(note.content || '') || '';
+  const contentText = htmlToPlainText(note.content || '') || '';
   const measure = document.createElement('canvas').getContext('2d');
   measure.font = `${fontSize}px ${cssFontFamily(settings.font)}, sans-serif`;
-  let estimatedLines = 2 + contentText.split(/\n/).length;
-  contentText.split(/\s+/).forEach(word => {
-    estimatedLines += Math.max(0, Math.floor(measure.measureText(word).width / Math.max(1, width - pad * 2)));
-  });
+  const maxTextWidth = width - pad * 2;
+  const contentLines = getWrappedCanvasLines(measure, contentText, maxTextWidth).length;
+  measure.font = `700 24px ${cssFontFamily(settings.font)}, sans-serif`;
+  const titleLines = includeTitle ? getWrappedCanvasLines(measure, note.title || '제목 없음', maxTextWidth).length : 0;
   let drawingImg = null;
   if (note.drawing) {
     try { drawingImg = await loadImage(note.drawing); } catch(e) { drawingImg = null; }
   }
   const drawingHeight = drawingImg ? Math.round((width - pad * 2) * (drawingImg.height / drawingImg.width)) + 24 : 0;
-  const height = Math.max(160, pad * 2 + (includeTitle ? 58 : 0) + estimatedLines * lineHeight + drawingHeight);
+  const height = Math.max(160, pad * 2 + (includeTitle ? 34 * titleLines + 34 : 0) + contentLines * lineHeight + drawingHeight + lineHeight * 2);
   const canvas = document.createElement('canvas');
   canvas.width = width * scale;
   canvas.height = height * scale;
@@ -1921,8 +2045,7 @@ async function renderPngFallback(note, includeTitle, width, pad, scale) {
   let y = pad;
   if (includeTitle) {
     ctx.font = `700 24px ${cssFontFamily(settings.font)}, sans-serif`;
-    ctx.fillText(note.title || '제목 없음', pad, y);
-    y += 42;
+    y = wrapCanvasText(ctx, note.title || '제목 없음', pad, y, width - pad * 2, 34) + 8;
     ctx.strokeStyle = '#e5e5e3';
     ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(width - pad, y); ctx.stroke();
     y += 18;
@@ -1942,8 +2065,11 @@ async function exportPngWithSvg(note, includeTitle, width, pad, scale) {
   exportNode.style.position = 'fixed';
   exportNode.style.left = '-9999px';
   exportNode.style.top = '0';
+  exportNode.style.height = 'auto';
+  exportNode.style.overflow = 'visible';
   document.body.appendChild(exportNode);
-  const H = Math.max(120, Math.ceil(exportNode.offsetHeight));
+  await waitForImages(exportNode);
+  const H = Math.max(120, Math.ceil(Math.max(exportNode.scrollHeight, exportNode.offsetHeight, exportNode.getBoundingClientRect().height)) + 2);
   document.body.removeChild(exportNode);
   exportNode.style.position = '';
   exportNode.style.left = '';
